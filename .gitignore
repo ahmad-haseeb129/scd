@@ -1,0 +1,19 @@
+# Maven build output
+target/
+
+# Eclipse / IntelliJ files (re-created by the import)
+.classpath
+.project
+.settings/
+.idea/
+*.iml
+
+# Compiled classes and logs
+*.class
+*.log
+
+# Eclipse default output folder
+bin/
+
+# Documentation (Word files are not pushed)
+docs/
