@@ -286,11 +286,11 @@ class CollectionDatabaseTest {
         Hierarchy a = new Hierarchy();
         a.collectionId = collectionDAO.insertCollection(newCollection("Collection A"));
 
-        a.book1Id = insert("INSERT INTO book (collection_id, number, title) VALUES (?, ?, ?)", a.collectionId, 1, "Book 1");
-        int book2 = insert("INSERT INTO book (collection_id, number, title) VALUES (?, ?, ?)", a.collectionId, 2, "Book 2");
-        a.chapter1Id = insert("INSERT INTO chapter (book_id, number, title) VALUES (?, ?, ?)", a.book1Id, 1, "Chapter 1.1");
-        int chapter2 = insert("INSERT INTO chapter (book_id, number, title) VALUES (?, ?, ?)", a.book1Id, 2, "Chapter 1.2");
-        int chapter3 = insert("INSERT INTO chapter (book_id, number, title) VALUES (?, ?, ?)", book2, 1, "Chapter 2.1");
+        a.book1Id = insert("INSERT INTO book (collection_id, book_number, title) VALUES (?, ?, ?)", a.collectionId, 1, "Book 1");
+        int book2 = insert("INSERT INTO book (collection_id, book_number, title) VALUES (?, ?, ?)", a.collectionId, 2, "Book 2");
+        a.chapter1Id = insert("INSERT INTO chapter (book_id, chapter_number, title) VALUES (?, ?, ?)", a.book1Id, 1, "Chapter 1.1");
+        int chapter2 = insert("INSERT INTO chapter (book_id, chapter_number, title) VALUES (?, ?, ?)", a.book1Id, 2, "Chapter 1.2");
+        int chapter3 = insert("INSERT INTO chapter (book_id, chapter_number, title) VALUES (?, ?, ?)", book2, 1, "Chapter 2.1");
 
         a.hadith1Id = insertHadith(a.chapter1Id, "1");
         int hadith2 = insertHadith(a.chapter1Id, "2");
@@ -312,8 +312,8 @@ class CollectionDatabaseTest {
 
     private int buildSmallCollectionB() throws SQLException {
         int collectionId = collectionDAO.insertCollection(newCollection("Collection B"));
-        int book = insert("INSERT INTO book (collection_id, number, title) VALUES (?, ?, ?)", collectionId, 1, "Book B");
-        int chapter = insert("INSERT INTO chapter (book_id, number, title) VALUES (?, ?, ?)", book, 1, "Chapter B");
+        int book = insert("INSERT INTO book (collection_id, book_number, title) VALUES (?, ?, ?)", collectionId, 1, "Book B");
+        int chapter = insert("INSERT INTO chapter (book_id, chapter_number, title) VALUES (?, ?, ?)", book, 1, "Chapter B");
         int hadith = insertHadith(chapter, "1");
         insertTranslation(hadith, "Urdu");
         insert("INSERT INTO glossary_entry (chapter_id, arabic_term, urdu_meaning) VALUES (?, ?, ?)", chapter, "term", "meaning");
@@ -326,7 +326,7 @@ class CollectionDatabaseTest {
     }
 
     private void insertTranslation(int hadithId, String language) throws SQLException {
-        insert("INSERT INTO translation (hadith_id, language, text) VALUES (?, ?, ?)", hadithId, language, "text");
+        insert("INSERT INTO translation (hadith_id, language, translated_text) VALUES (?, ?, ?)", hadithId, language, "text");
     }
 
     private int insert(String sql, Object... values) throws SQLException {
