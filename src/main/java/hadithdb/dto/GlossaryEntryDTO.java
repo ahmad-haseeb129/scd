@@ -9,6 +9,11 @@ public class GlossaryEntryDTO
     private String urduMeaning;
     private String urduExplanation;
     
+    public GlossaryEntryDTO()
+    {
+    	
+    }
+    
     public GlossaryEntryDTO(int id, int bookId, int chapterId, String arabicTerm, String urduMeaning, String urduExplanation)
     {
     	this.id = id;
