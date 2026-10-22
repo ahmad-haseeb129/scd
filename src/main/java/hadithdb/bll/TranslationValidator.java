@@ -18,7 +18,6 @@ public class TranslationValidator {
         }
         validateFields(dto);
 
-        // BR-10: at most one translation per language for a hadith.
         if (dal.languageExists(dto.getHadithId(), dto.getLanguage(), dto.getId())) {
             throw new ValidationException("Language",
                     "This hadith already has a " + dto.getLanguage() + " translation.");

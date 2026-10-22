@@ -64,7 +64,7 @@ public class TranslationDAO implements ITranslationDAO{
 
 	@Override 
 	public TranslationDTO getTranslationById(int id) {
-		String sqlQuery = "SELECT " + COLUMNS + "FROM translation WHERE id = ?";
+		String sqlQuery = "SELECT " + COLUMNS + " FROM translation WHERE id = ?";
 		
 		try(Connection connection = DBConnection.getConnection();
 				PreparedStatement statement = connection.prepareStatement(sqlQuery)){

@@ -1,5 +1,8 @@
 package hadithdb.pl;
 
+import hadithdb.bll.HadithBO;
+import hadithdb.bll.TranslationBO;
+
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -15,6 +18,8 @@ public class MainWindow extends JFrame {
     private final CollectionBO collectionBO;
     private final BookBO bookBO;
     private final ChapterBO chapterBO;
+    private HadithBO hadithBO;
+    private TranslationBO translationBO;
 
     public MainWindow(CollectionBO collectionBO, BookBO bookBO, ChapterBO chapterBO) {
         super("Hadith Database");
@@ -41,7 +46,12 @@ public class MainWindow extends JFrame {
 
     public void showHadith(int chapterId) {
 
-        notConnected("Hadith");
+    	if (hadithBO == null || translationBO == null) {
+            notConnected("Hadith");
+            return;
+        }
+        final java.awt.Container previous = getContentPane();
+        showPanel(new HadithPanel(hadithBO, translationBO, chapterId, () -> showPanel((JPanel) previous)));
     }
 
     public void showBookGlossary(int bookId) {
@@ -59,6 +69,11 @@ public class MainWindow extends JFrame {
         revalidate();
         repaint();
         setVisible(true);
+    }
+    
+    public void setHadithBOs(HadithBO hadithBO, TranslationBO translationBO) {
+        this.hadithBO = hadithBO;
+        this.translationBO = translationBO;
     }
 
     private void notConnected(String screen) {
