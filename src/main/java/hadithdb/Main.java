@@ -7,15 +7,17 @@ import hadithdb.bll.ChapterBO;
 import hadithdb.bll.CollectionBO;
 import hadithdb.dal.AbstractDAOFactory;
 import hadithdb.dal.DALFacade;
+// import hadithdb.dal.DBConnection;
 import hadithdb.dal.IDAOFactory;
 import hadithdb.dal.IDALFacade;
 import hadithdb.pl.MainWindow;
 
-public class Main 
+public class Main
 {
-    public static void main(String[] args) 
+    public static void main(String[] args)
     {
         SwingUtilities.invokeLater(() -> {
+            // DBConnection.initializeSchema();
             IDAOFactory factory = AbstractDAOFactory.getInstance();
             IDALFacade dal = new DALFacade(
                 factory.createCollectionDAO(),

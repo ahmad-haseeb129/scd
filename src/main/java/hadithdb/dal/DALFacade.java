@@ -124,12 +124,6 @@ public class DALFacade implements IDALFacade
     {
         return bookDAO.isBookNumberExists(collectionId, bookNumber, excludeBookId);
     }
-
-    @Override
-    public DeletionImpactDTO getBookDeletionImpact(int bookId) 
-    {
-        return impactDAO.impactOfBook(bookId);
-    }
     
     @Override
     public boolean bookExists(int id) 
@@ -181,11 +175,6 @@ public class DALFacade implements IDALFacade
     }
 
     //Deletion Impact
-    @Override
-    public DeletionImpactDTO getChapterDeletionImpact(int chapterId) 
-    {
-        return impactDAO.impactOfChapter(chapterId);
-    }
 
     @Override
     public DeletionImpactDTO impactOfCollection(int id) 
@@ -250,9 +239,9 @@ public class DALFacade implements IDALFacade
     }
 
     @Override
-    public boolean hadithNumberExists(int chaperId, String hadithNumber, int excludeId) 
+    public boolean hadithNumberExists(int chapterId, String hadithNumber, int excludeId) 
     {
-        return hadithDAO.hadithNumberExists(chaperId, hadithNumber, excludeId);
+        return hadithDAO.hadithNumberExists(chapterId, hadithNumber, excludeId);
     }
     
     // Translation

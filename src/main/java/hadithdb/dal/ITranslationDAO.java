@@ -15,7 +15,7 @@ public interface ITranslationDAO {
 	
 	boolean deleteTranslation(int id);
 	
-	boolean languageExists(int hadithId, String language, int ecludeId);
+	boolean languageExists(int hadithId, String language, int excludeId);
 	
 	int countTranslation(int hadithId);
 }

@@ -18,7 +18,7 @@ public class HadithDAO implements IHadithDAO{
 	
 	@Override
 	public int insertHadithWithTranslation(HadithDTO hadith,TranslationDTO firstTranslation) {
-		String hadithSql = "INSERT INTO hadith (chapter_id, hadith_number, arabic_text, source_refernce, isnad, matn, notes)"
+		String hadithSql = "INSERT INTO hadith (chapter_id, hadith_number, arabic_text, source_reference, isnad, matn, notes)"
 				+ "VALUES(?,?,?,?,?,?,?)";
 		
 		String translationSql = "INSERT INTO translation (hadith_id, language, translated_text, translator)"
@@ -34,7 +34,7 @@ public class HadithDAO implements IHadithDAO{
 				try(PreparedStatement statement = connection.prepareStatement(hadithSql,Statement.RETURN_GENERATED_KEYS)){
 					statement.setInt(1, hadith.getChapterId());
 					statement.setString(2, hadith.getHadithNumber());
-					statement.setString(3, hadith.getArabictext());
+					statement.setString(3, hadith.getArabicText());
 					statement.setString(4, hadith.getSourceReference());
 					statement.setString(5, hadith.getIsnad());
 					statement.setString(6, hadith.getMatn() );
@@ -49,8 +49,8 @@ public class HadithDAO implements IHadithDAO{
 				try(PreparedStatement statement = connection.prepareStatement(translationSql)){
 					statement.setInt(1, hadithId);
 					statement.setString(2, firstTranslation.getLanguage());
-					statement.setString(2, firstTranslation.getTranslatedText());
-					statement.setString(2, firstTranslation.getTranslator());
+					statement.setString(3, firstTranslation.getTranslatedText());
+					statement.setString(4, firstTranslation.getTranslator());
 					statement.executeUpdate();
 				}
 				
@@ -72,17 +72,18 @@ public class HadithDAO implements IHadithDAO{
 	@Override
 	public boolean updateHadith(HadithDTO dto) {
 		String sqlQuery = "UPDATE hadith SET hadith_number = ?, arabic_text = ?, "
-				+ "source_reference = ?, isnad = ?, matn = ?, notes = ?, Where id = ?";
+				+ "source_reference = ?, isnad = ?, matn = ?, notes = ?"
+				+ " Where id = ?";
 		
 		try(Connection connection = DBConnection.getConnection();
 				PreparedStatement statement = connection.prepareStatement(sqlQuery)){
 			statement.setString(1, dto.getHadithNumber());
-			statement.setString(2, dto.getArabictext());
+			statement.setString(2, dto.getArabicText());
 			statement.setString(3, dto.getSourceReference());
 			statement.setString(4, dto.getIsnad());
 			statement.setString(5, dto.getMatn());
 			statement.setString(6, dto.getNotes());
-			statement.setInt(7, dto.getID());
+			statement.setInt(7, dto.getId());
 			
 			return statement.executeUpdate() > 0;
 			
@@ -101,7 +102,7 @@ public class HadithDAO implements IHadithDAO{
 	@Override
 	public HadithDTO getHadithById(int id) {
 		String sqlQuery = "SELECT "
-				+ COLUMNS + "FROM hadith WHERE id = ?";
+				+ COLUMNS + " FROM hadith WHERE id = ?";
 		
 		try(Connection connection = DBConnection.getConnection();
 				PreparedStatement statement = connection.prepareStatement(sqlQuery)){
@@ -117,8 +118,8 @@ public class HadithDAO implements IHadithDAO{
 	
 	@Override
 	public List<HadithDTO> getHadithByChapterId(int chapterId){
-		String sqlQuery = "SELECT " + COLUMNS + "FROM hadith WHERE chapter_id = ?"
-				+ "ORDER BY LENGTH(hadith_number), hadith_number, id";
+		String sqlQuery = "SELECT " + COLUMNS + " FROM hadith WHERE chapter_id = ? "
+		        + "ORDER BY LENGTH(hadith_number), hadith_number, id";
 		
 		try(Connection connection = DBConnection.getConnection();
 				PreparedStatement statement = connection.prepareStatement(sqlQuery)){

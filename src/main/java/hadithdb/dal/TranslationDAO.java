@@ -12,9 +12,7 @@ import hadithdb.dto.TranslationDTO;
 
 
 public class TranslationDAO implements ITranslationDAO{
-	private static final String COLUMNS = 
-			"id, hadith_id, language,translation "
-			+ ", translated_text, translator";
+	private static final String COLUMNS = "id, hadith_id, language, translated_text, translator";
 	
 	@Override
 	public int insertTranslation(TranslationDTO dto) {
@@ -60,7 +58,7 @@ public class TranslationDAO implements ITranslationDAO{
 	
 	private TranslationDTO toDto(ResultSet row) throws SQLException{
 		return new TranslationDTO(row.getInt("id"),row .getInt("hadith_id"),
-				row.getString("language"),row.getString("transalted_text"),
+				row.getString("language"),row.getString("translated_text"),
 				row.getString("translator"));
 	}
 

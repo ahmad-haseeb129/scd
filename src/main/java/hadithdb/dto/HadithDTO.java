@@ -23,7 +23,7 @@ public class HadithDTO {
 		
 	}
 	
-	public int getID() {
+	public int getId() {
 		return id;
 	}
 	
@@ -35,7 +35,7 @@ public class HadithDTO {
 		return chapterId;
 	}
 	
-	public void setChpaterId(int chapterId) {
+	public void setChapterId(int chapterId) {
 		this.chapterId=chapterId;
 	}
 	
@@ -47,8 +47,8 @@ public class HadithDTO {
 		this.hadithNumber=hadithNumber;
 	}
 	
-	public String getArabictext() {
-		return arabicText;
+	public String getArabicText() {
+	    return arabicText;
 	}
 	
 	public void setArabicText(String arabicText) {
