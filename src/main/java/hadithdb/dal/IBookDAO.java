@@ -16,4 +16,6 @@ public interface IBookDAO {
     List<BookDTO> getBooksByCollection(int collectionId);
 
     boolean isBookNumberExists(int collectionId, int bookNumber, int excludeBookId);
+    
+    boolean bookExists(int id);
 }

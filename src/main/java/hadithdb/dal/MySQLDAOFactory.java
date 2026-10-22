@@ -9,27 +9,27 @@ public class MySQLDAOFactory extends AbstractDAOFactory {
 
     @Override
     public IBookDAO createBookDAO() {
-        return null;
+        return new BookDAO();
     }
 
     @Override
     public IChapterDAO createChapterDAO() {
-        return null;
+        return new ChapterDAO();
     }
 
     @Override
     public IHadithDAO createHadithDAO() {
-        return null;
+        return new HadithDAO();
     }
 
     @Override
     public ITranslationDAO createTranslationDAO() {
-        return null;
+        return new TranslationDAO();
     }
 
     @Override
     public IGlossaryDAO createGlossaryDAO() {
-        return null;
+        return new GlossaryDAO();
     }
 
     @Override

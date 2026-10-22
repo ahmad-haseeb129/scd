@@ -42,7 +42,6 @@ public class GlossaryDAO implements IGlossaryDAO
         }
     }
 
-    // Only the text can be edited. The book or chapter an entry belongs to stays fixed.
     @Override
     public boolean updateGlossaryEntry(GlossaryEntryDTO dto) 
     {
@@ -133,7 +132,6 @@ public class GlossaryDAO implements IGlossaryDAO
         }
     }
 
-    // 0 means "no parent", which is stored as NULL.
     private void setParent(PreparedStatement statement, int index, int parentId) throws SQLException 
     {
         if (parentId > 0) 
@@ -146,7 +144,6 @@ public class GlossaryDAO implements IGlossaryDAO
         }
     }
 
-    // getInt gives 0 for a NULL column, which matches our "0 = no parent" rule.
     private GlossaryEntryDTO toDTO(ResultSet row) throws SQLException 
     {
         return new GlossaryEntryDTO(row.getInt("id"), row.getInt("book_id"), row.getInt("chapter_id"),

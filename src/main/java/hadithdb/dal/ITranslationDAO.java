@@ -11,7 +11,7 @@ public interface ITranslationDAO {
 	
 	TranslationDTO getTranslationById(int id);
 	
-	List<TranslationDTO> getTranslationsByHadithId(int hadithId);
+	List<TranslationDTO> getTranslationByHadithId(int hadithId);
 	
 	boolean deleteTranslation(int id);
 	

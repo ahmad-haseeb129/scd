@@ -1,6 +1,7 @@
 package hadithdb.bll;
 
 import java.util.List;
+
 import hadithdb.dal.IDALFacade;
 import hadithdb.dto.BookDTO;
 import hadithdb.dto.DeletionImpactDTO;
@@ -15,29 +16,29 @@ public class BookBO {
         this.validator = new BookValidator();
     }
 
-    public int addBook(BookDTO book) {
-        validator.validate(book, dal);
-        return dal.insertBook(book);
+    public int saveBook(BookDTO dto) {
+        validator.validate(dto, dal);
+        if (dto.getId() == 0) {
+            return dal.insertBook(dto);
+        }
+        dal.updateBook(dto);
+        return dto.getId();
     }
 
-    public boolean updateBook(BookDTO book) {
-        validator.validate(book, dal);
-        return dal.updateBook(book);
+    public BookDTO getBook(int id) {
+        return dal.getBookById(id);
     }
 
-    public boolean deleteBook(int bookId) {
-        return dal.deleteBook(bookId);
-    }
-
-    public BookDTO getBookById(int bookId) {
-        return dal.getBookById(bookId);
-    }
-
-    public List<BookDTO> getBooksByCollection(int collectionId) {
+    public List<BookDTO> listBooks(int collectionId) {
         return dal.getBooksByCollection(collectionId);
     }
 
-    public DeletionImpactDTO getDeletionImpact(int bookId) {
-        return dal.getBookDeletionImpact(bookId);
+    public boolean deleteBook(int id, IConfirmer confirmer) {
+        DeletionImpactDTO impact = dal.impactOfBook(id);
+        boolean confirmed = confirmer.confirm(impact);
+        if (confirmed) {
+            return dal.deleteBook(id);
+        }
+        return false;
     }
 }

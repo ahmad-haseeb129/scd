@@ -10,7 +10,7 @@ public class HadithDTO {
 	private String matn;
 	private String notes;
 	
-	public HadithDTO(int id, int chapterId, String hadithNmber, String arabicText, 
+	public HadithDTO(int id, int chapterId, String hadithNumber, String arabicText, 
 			String sourceReference, String isnad, String matn, String notes) {
 		this.id=id;
 		this.chapterId=chapterId;
