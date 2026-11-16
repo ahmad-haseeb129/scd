@@ -5,6 +5,7 @@ import javax.swing.SwingUtilities;
 import hadithdb.bll.BookBO;
 import hadithdb.bll.ChapterBO;
 import hadithdb.bll.CollectionBO;
+import hadithdb.bll.GlossaryBO;
 import hadithdb.bll.HadithBO;
 import hadithdb.bll.TranslationBO;
 import hadithdb.dal.AbstractDAOFactory;
@@ -33,10 +34,12 @@ public class Main
             CollectionBO collectionBO = new CollectionBO(dal);
             BookBO bookBO = new BookBO(dal);
             ChapterBO chapterBO = new ChapterBO(dal);
+            HadithBO hadithBO = new HadithBO(dal);
+            TranslationBO translationBO = new TranslationBO(dal);
+            GlossaryBO glossaryBO = new GlossaryBO(dal);
             
             
-            MainWindow window = new MainWindow(collectionBO, bookBO, chapterBO);
-            window.setHadithBOs(new HadithBO(dal), new TranslationBO(dal));
+            MainWindow window = new MainWindow(collectionBO, bookBO, chapterBO, hadithBO, translationBO, glossaryBO);
             window.showCollections();
         });
     }

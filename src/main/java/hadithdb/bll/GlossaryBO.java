@@ -18,18 +18,22 @@ public class GlossaryBO
         this.validator = new GlossaryValidator();
     }
 
-    public int saveEntry(GlossaryEntryDTO dto) 
+    public int saveEntry(GlossaryEntryDTO dto)
     {
         validator.validate(dto);
-        if ((dal.chapterExists(dto.getChapterId())) || (dal.bookExists(dto.getBookId())))
-        {        	
+
+        if (dto.getId() == 0)
+        {
+            boolean parentExists = dto.getBookId() > 0? dal.bookExists(dto.getBookId()): dal.chapterExists(dto.getChapterId());
+
+            if (!parentExists)
+            {
+                throw new ValidationException("Parent",
+                    "The book or chapter for this entry does not exist.");
+            }
             return dal.insertGlossaryEntry(dto);
         }
-        else
-        {
-        	throw new ValidationException("GlossaryEntry", "The chapter or book for this entry does not exist.");
-        }
-        
+
         dal.updateGlossaryEntry(dto);
         return dto.getId();
     }

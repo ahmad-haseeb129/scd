@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 import hadithdb.bll.BookBO;
 import hadithdb.bll.ChapterBO;
 import hadithdb.bll.CollectionBO;
+import hadithdb.bll.GlossaryBO;
 
 public class MainWindow extends JFrame {
 
@@ -20,12 +21,17 @@ public class MainWindow extends JFrame {
     private final ChapterBO chapterBO;
     private HadithBO hadithBO;
     private TranslationBO translationBO;
+    private GlossaryBO glossaryBO;
 
-    public MainWindow(CollectionBO collectionBO, BookBO bookBO, ChapterBO chapterBO) {
+    public MainWindow(CollectionBO collectionBO, BookBO bookBO, ChapterBO chapterBO, HadithBO hadithBO, TranslationBO translationBO, GlossaryBO glossaryBO) 
+    {
         super("Hadith Database");
         this.collectionBO = collectionBO;
         this.bookBO = bookBO;
         this.chapterBO = chapterBO;
+        this.hadithBO = hadithBO;
+        this.translationBO = translationBO;
+        this.glossaryBO = glossaryBO;
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(900, 650);
         setLocationRelativeTo(null);
@@ -54,14 +60,26 @@ public class MainWindow extends JFrame {
         showPanel(new HadithPanel(hadithBO, translationBO, chapterId, () -> showPanel((JPanel) previous)));
     }
 
-    public void showBookGlossary(int bookId) {
-
-        notConnected("Book glossary");
+    public void showBookGlossary(int bookId) 
+    {
+        if (glossaryBO == null)
+        { 
+        	notConnected("Book glossary"); 
+        	return; 
+        }
+        final java.awt.Container previous = getContentPane();
+        showPanel(new GlossaryPanel(glossaryBO, bookId, 0, () -> showPanel((JPanel) previous)));
     }
 
-    public void showChapterGlossary(int chapterId) {
-
-        notConnected("Chapter glossary");
+    public void showChapterGlossary(int chapterId) 
+    {
+        if (glossaryBO == null) 
+        { 
+        	notConnected("Chapter glossary"); 
+        	return; 
+        }
+        final java.awt.Container previous = getContentPane();
+        showPanel(new GlossaryPanel(glossaryBO, 0, chapterId, () -> showPanel((JPanel) previous)));
     }
 
     private void showPanel(JPanel panel) {
@@ -69,11 +87,6 @@ public class MainWindow extends JFrame {
         revalidate();
         repaint();
         setVisible(true);
-    }
-    
-    public void setHadithBOs(HadithBO hadithBO, TranslationBO translationBO) {
-        this.hadithBO = hadithBO;
-        this.translationBO = translationBO;
     }
 
     private void notConnected(String screen) {

@@ -60,16 +60,41 @@ public class CollectionPanel extends JPanel {
 
         JButton newButton = new JButton("New");
         JButton saveButton = new JButton("Save");
+        
+        JButton exitButton= new JButton("Exit");
+        exitButton.setOpaque(true);
+        exitButton.addMouseListener(new java.awt.event.MouseAdapter() 
+        {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) 
+            {
+                exitButton.setBackground(Color.RED);
+                exitButton.setForeground(Color.WHITE);
+            }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) 
+            {
+                exitButton.setBackground(null);
+                exitButton.setForeground(null);
+            }
+        });
+        
         newButton.addActionListener(e -> onNew());
         saveButton.addActionListener(e -> onSave());
+        exitButton.addActionListener(e -> onExit());
         deleteButton.addActionListener(e -> onDelete());
         openBooksButton.addActionListener(e -> onOpenBooks());
 
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        buttons.add(newButton);
-        buttons.add(saveButton);
-        buttons.add(deleteButton);
-        buttons.add(openBooksButton);
+        JPanel leftButtons = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        leftButtons.add(newButton);
+        leftButtons.add(saveButton);
+        leftButtons.add(deleteButton);
+        leftButtons.add(openBooksButton);
+
+        JPanel rightButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        rightButtons.add(exitButton);
+
+        JPanel buttons = new JPanel(new BorderLayout());
+        buttons.add(leftButtons, BorderLayout.WEST);
+        buttons.add(rightButtons, BorderLayout.EAST);
 
         JPanel south = new JPanel(new BorderLayout(0, 8));
         south.add(buildForm(), BorderLayout.CENTER);
@@ -84,7 +109,12 @@ public class CollectionPanel extends JPanel {
         loadCollections();
     }
 
-    private void onSave() {
+    private void onExit() 
+    {
+		System.exit(0);
+	}
+
+	private void onSave() {
         errorLabel.setText(" ");
         CollectionDTO dto = new CollectionDTO(getSelectedId(), nameField.getText(), compilerField.getText(),
                 descriptionArea.getText(), editionField.getText(), publicationInfoField.getText());
