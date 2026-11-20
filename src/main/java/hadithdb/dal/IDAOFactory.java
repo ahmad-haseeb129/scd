@@ -15,4 +15,10 @@ public interface IDAOFactory {
     IGlossaryDAO createGlossaryDAO();
 
     IDeletionImpactDAO createDeletionImpactDAO();
+
+    ITopicDAO createTopicDAO();
+
+    IGradeDefinitionDAO createGradeDefinitionDAO();
+
+    IClassificationImpactDAO createClassificationImpactDAO();
 }

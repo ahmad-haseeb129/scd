@@ -1,5 +1,9 @@
 package hadithdb.dal;
 
+import hadithdb.dto.GradeDefinitionDTO;
+
+import hadithdb.dto.TopicDTO;
+
 import java.util.List;
 
 import hadithdb.dto.BookDTO;
@@ -20,6 +24,10 @@ public class DALFacade implements IDALFacade
     private final IGlossaryDAO glossaryDAO;
     private final IDeletionImpactDAO impactDAO;
 
+    private final ITopicDAO topics;
+    private final IGradeDefinitionDAO grades;
+    private final IClassificationImpactDAO impact;
+
     public DALFacade(
             ICollectionDAO collectionDAO, 
             IBookDAO bookDAO, 
@@ -29,6 +37,25 @@ public class DALFacade implements IDALFacade
             IGlossaryDAO glossaryDAO,
             IDeletionImpactDAO impactDAO) 
     {
+        this(collectionDAO, bookDAO, chapterDAO, hadithDAO, translationDAO, glossaryDAO, impactDAO,
+             null, null, null);
+    }
+
+    public DALFacade(
+            ICollectionDAO collectionDAO, 
+            IBookDAO bookDAO, 
+            IChapterDAO chapterDAO,
+            IHadithDAO hadithDAO, 
+            ITranslationDAO translationDAO, 
+            IGlossaryDAO glossaryDAO,
+            IDeletionImpactDAO impactDAO,
+            ITopicDAO topics,
+            IGradeDefinitionDAO grades,
+            IClassificationImpactDAO impact) 
+    {
+        this.topics = topics;
+        this.grades = grades;
+        this.impact = impact;
         this.collectionDAO = collectionDAO;
         this.bookDAO = bookDAO;
         this.chapterDAO = chapterDAO;
@@ -47,7 +74,10 @@ public class DALFacade implements IDALFacade
             factory.createHadithDAO(),
             factory.createTranslationDAO(),
             factory.createGlossaryDAO(),
-            factory.createDeletionImpactDAO()
+            factory.createDeletionImpactDAO(),
+            factory.createTopicDAO(),
+            factory.createGradeDefinitionDAO(),
+            factory.createClassificationImpactDAO()
         );
     }
 
@@ -323,5 +353,89 @@ public class DALFacade implements IDALFacade
     public boolean deleteGlossaryEntry(int id) 
     {
         return glossaryDAO.deleteGlossaryEntry(id);
+    }
+
+    @Override
+    public DeletionImpactDTO impactOfTopic(int id)
+    {
+        return impact.impactOfTopic(id);
+    }
+
+    @Override
+    public DeletionImpactDTO impactOfGrade(int id)
+    {
+        return impact.impactOfGrade(id);
+    }
+
+    @Override
+    public int insertTopic(TopicDTO topic)
+    {
+        return topics.insertTopic(topic);
+    }
+
+    @Override
+    public boolean updateTopic(TopicDTO topic)
+    {
+        return topics.updateTopic(topic);
+    }
+
+    @Override
+    public boolean deleteTopic(int id, int expectedLinks)
+    {
+        return topics.deleteTopic(id, expectedLinks);
+    }
+
+    @Override
+    public TopicDTO getTopicById(int id)
+    {
+        return topics.getTopicById(id);
+    }
+
+    @Override
+    public List<TopicDTO> getAllTopics()
+    {
+        return topics.getAllTopics();
+    }
+
+    @Override
+    public boolean topicExists(int id)
+    {
+        return topics.topicExists(id);
+    }
+
+    @Override
+    public int insertGradeDefinition(GradeDefinitionDTO grade)
+    {
+        return grades.insertGradeDefinition(grade);
+    }
+
+    @Override
+    public boolean updateGradeDefinition(GradeDefinitionDTO grade)
+    {
+        return grades.updateGradeDefinition(grade);
+    }
+
+    @Override
+    public boolean deleteGradeDefinition(int id, int expectedLinks)
+    {
+        return grades.deleteGradeDefinition(id, expectedLinks);
+    }
+
+    @Override
+    public GradeDefinitionDTO getGradeDefinitionById(int id)
+    {
+        return grades.getGradeDefinitionById(id);
+    }
+
+    @Override
+    public List<GradeDefinitionDTO> getAllGradeDefinitions()
+    {
+        return grades.getAllGradeDefinitions();
+    }
+
+    @Override
+    public boolean gradeDefinitionExists(int id)
+    {
+        return grades.gradeDefinitionExists(id);
     }
 }

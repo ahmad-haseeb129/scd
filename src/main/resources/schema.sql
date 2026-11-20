@@ -74,3 +74,55 @@ CREATE TABLE IF NOT EXISTS glossary_entry (
   FOREIGN KEY (book_id) REFERENCES book(id) ON DELETE CASCADE,
   FOREIGN KEY (chapter_id) REFERENCES chapter(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS narrator (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  display_name VARCHAR(255) NOT NULL,
+  arabic_name VARCHAR(255) NULL,
+  urdu_name VARCHAR(255) NULL,
+  alternative_names TEXT NULL,
+  notes TEXT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS topic (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS authenticity_grade (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  label VARCHAR(255) NOT NULL,
+  urdu_explanation TEXT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS hadith_narrator (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  hadith_id INT NOT NULL,
+  narrator_id INT NOT NULL,
+  transmission_order INT NULL,
+  UNIQUE (hadith_id, narrator_id),
+  UNIQUE (hadith_id, transmission_order),
+  FOREIGN KEY (hadith_id) REFERENCES hadith(id) ON DELETE CASCADE,
+  FOREIGN KEY (narrator_id) REFERENCES narrator(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS hadith_topic (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  hadith_id INT NOT NULL,
+  topic_id INT NOT NULL,
+  UNIQUE (hadith_id, topic_id),
+  FOREIGN KEY (hadith_id) REFERENCES hadith(id) ON DELETE CASCADE,
+  FOREIGN KEY (topic_id) REFERENCES topic(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS hadith_grade (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  hadith_id INT NOT NULL,
+  grade_id INT NOT NULL,
+  grading_authority VARCHAR(255) NOT NULL,
+  citation TEXT NULL,
+  UNIQUE (hadith_id, grade_id, grading_authority),
+  FOREIGN KEY (hadith_id) REFERENCES hadith(id) ON DELETE CASCADE,
+  FOREIGN KEY (grade_id) REFERENCES authenticity_grade(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -1,6 +1,8 @@
 package hadithdb.bll;
 
-public class ValidationException extends RuntimeException {
+import hadithdb.exception.DomainException;
+
+public class ValidationException extends DomainException {
 
     private static final long serialVersionUID = 1L;
 

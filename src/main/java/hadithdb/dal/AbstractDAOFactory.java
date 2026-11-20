@@ -1,5 +1,7 @@
 package hadithdb.dal;
 
+import hadithdb.exception.ConfigurationException;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
@@ -11,10 +13,11 @@ public abstract class AbstractDAOFactory implements IDAOFactory {
     public static synchronized IDAOFactory getInstance() {
         if (instance == null) {
             try {
-                instance = (IDAOFactory) Class.forName(loadFactoryClassName()).getDeclaredConstructor().newInstance();
-            } catch (Exception e) {
-                System.err.println("Cannot create the DAO factory named by dal.factory in config.properties: " + e);
-                System.exit(1);
+                String name = loadFactoryClassName();
+                Class<?> type = Class.forName(name);
+                instance = type.asSubclass(IDAOFactory.class).getDeclaredConstructor().newInstance();
+            } catch (ReflectiveOperationException | ClassCastException | IOException | IllegalArgumentException e) {
+                throw new ConfigurationException("Check dal.factory in config.properties.", e);
             }
         }
         return instance;
@@ -25,6 +28,10 @@ public abstract class AbstractDAOFactory implements IDAOFactory {
         try (FileInputStream in = new FileInputStream("config.properties")) {
             properties.load(in);
         }
-        return properties.getProperty("dal.factory");
+        String name = properties.getProperty("dal.factory");
+        if (name == null || name.trim().isEmpty()) {
+            throw new ConfigurationException("Set dal.factory in config.properties.", null);
+        }
+        return name.trim();
     }
 }

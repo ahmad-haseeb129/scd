@@ -36,4 +36,19 @@ public class MySQLDAOFactory extends AbstractDAOFactory {
     public IDeletionImpactDAO createDeletionImpactDAO() {
         return new DeletionImpactDAO();
     }
+
+    @Override
+    public ITopicDAO createTopicDAO() {
+        return new TopicDAO();
+    }
+
+    @Override
+    public IGradeDefinitionDAO createGradeDefinitionDAO() {
+        return new GradeDefinitionDAO();
+    }
+
+    @Override
+    public IClassificationImpactDAO createClassificationImpactDAO() {
+        return new ClassificationImpactDAO();
+    }
 }

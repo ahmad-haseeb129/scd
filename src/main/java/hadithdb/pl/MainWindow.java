@@ -1,5 +1,7 @@
 package hadithdb.pl;
 
+import hadithdb.bll.BLLFacade;
+
 import hadithdb.bll.HadithBO;
 import hadithdb.bll.TranslationBO;
 
@@ -23,15 +25,17 @@ public class MainWindow extends JFrame {
     private TranslationBO translationBO;
     private GlossaryBO glossaryBO;
 
-    public MainWindow(CollectionBO collectionBO, BookBO bookBO, ChapterBO chapterBO, HadithBO hadithBO, TranslationBO translationBO, GlossaryBO glossaryBO) 
+    public MainWindow(BLLFacade business) 
     {
         super("Hadith Database");
-        this.collectionBO = collectionBO;
-        this.bookBO = bookBO;
-        this.chapterBO = chapterBO;
-        this.hadithBO = hadithBO;
-        this.translationBO = translationBO;
-        this.glossaryBO = glossaryBO;
+        this.collectionBO = business.collections();
+        this.bookBO = business.books();
+        this.chapterBO = business.chapters();
+        this.hadithBO = business.hadith();
+        this.translationBO = business.translations();
+        this.glossaryBO = business.glossaries();
+        PresentationFacade management = new PresentationFacade(business);
+        management.install(this);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(900, 650);
         setLocationRelativeTo(null);

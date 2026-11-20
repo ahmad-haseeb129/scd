@@ -1,5 +1,9 @@
 package hadithdb.pl;
 
+import hadithdb.exception.RecordNotFoundException;
+
+import hadithdb.exception.DataAccessException;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -49,11 +53,18 @@ public class ChapterPanel extends JPanel {
         this.window = window;
         this.bookId = bookId;
 
+        UiText.table(table);
+        UiText.field(titleField);
+        UiText.description(descriptionArea);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setDefaultEditor(Object.class, null);
-        table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                onSelectionChanged();
+        table.getSelectionModel().addListSelectionListener(event -> {
+            if (!event.getValueIsAdjusting()) {
+                try {
+                    onSelectionChanged();
+                } catch (DataAccessException e) {
+                    showDatabaseError(e);
+                }
             }
         });
         descriptionArea.setLineWrap(true);
@@ -108,7 +119,10 @@ public class ChapterPanel extends JPanel {
         } catch (ValidationException e) {
             showError(e);
             return;
-        } catch (IllegalStateException e) {
+        } catch (RecordNotFoundException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Record not found", JOptionPane.WARNING_MESSAGE);
+            return;
+        } catch (DataAccessException e) {
             showDatabaseError(e);
             return;
         }
@@ -122,7 +136,10 @@ public class ChapterPanel extends JPanel {
             if (bo.deleteChapter(id, confirmer)) {
                 loadChapters();
             }
-        } catch (IllegalStateException e) {
+        } catch (RecordNotFoundException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Record not found", JOptionPane.WARNING_MESSAGE);
+            return;
+        } catch (DataAccessException e) {
             showDatabaseError(e);
         }
     }
@@ -150,11 +167,16 @@ public class ChapterPanel extends JPanel {
     }
 
     private void loadChapters() {
-        tableModel.setRowCount(0);
-        for (ChapterDTO dto : bo.listChapters(bookId)) {
-            tableModel.addRow(new Object[] {dto.getId(), dto.getChapterNumber(), dto.getTitle()});
+        try {
+            java.util.List<ChapterDTO> records = bo.listChapters(bookId);
+            tableModel.setRowCount(0);
+            for (ChapterDTO dto : records) {
+                tableModel.addRow(new Object[] {dto.getId(), dto.getChapterNumber(), dto.getTitle()});
+            }
+            clearForm();
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
         }
-        clearForm();
     }
 
     private int getSelectedId() {
@@ -171,10 +193,12 @@ public class ChapterPanel extends JPanel {
             numberField.requestFocusInWindow();
         } else if ("Title".equals(e.getField())) {
             titleField.requestFocusInWindow();
+        } else if ("Description".equals(e.getField())) {
+            descriptionArea.requestFocusInWindow();
         }
     }
 
-    private void showDatabaseError(IllegalStateException e) {
+    private void showDatabaseError(DataAccessException e) {
         JOptionPane.showMessageDialog(this, e.getMessage(), "Database error", JOptionPane.ERROR_MESSAGE);
     }
 

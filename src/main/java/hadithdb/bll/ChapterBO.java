@@ -1,5 +1,7 @@
 package hadithdb.bll;
 
+import hadithdb.exception.RecordNotFoundException;
+
 import java.util.List;
 
 import hadithdb.dal.IDALFacade;
@@ -21,7 +23,9 @@ public class ChapterBO {
         if (dto.getId() == 0) {
             return dal.insertChapter(dto);
         }
-        dal.updateChapter(dto);
+        if (!dal.updateChapter(dto)) {
+            throw new RecordNotFoundException("Chapter", dto.getId());
+        }
         return dto.getId();
     }
 
@@ -34,10 +38,16 @@ public class ChapterBO {
     }
 
     public boolean deleteChapter(int id, IConfirmer confirmer) {
+        if (!dal.chapterExists(id)) {
+            throw new RecordNotFoundException("Chapter", id);
+        }
         DeletionImpactDTO impact = dal.impactOfChapter(id);
         boolean confirmed = confirmer.confirm(impact);
         if (confirmed) {
-            return dal.deleteChapter(id);
+            if (!dal.deleteChapter(id)) {
+                throw new RecordNotFoundException("Chapter", id);
+            }
+            return true;
         }
         return false;
     }

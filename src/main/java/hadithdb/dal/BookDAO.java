@@ -1,5 +1,7 @@
 package hadithdb.dal;
 
+import hadithdb.exception.DataAccessException;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -35,7 +37,7 @@ public class BookDAO implements IBookDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not save the book: " + e.getMessage(), e);
+            throw new DataAccessException("Could not save the book.", e);
         }
     }
 
@@ -55,7 +57,7 @@ public class BookDAO implements IBookDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not save the book: " + e.getMessage(), e);
+            throw new DataAccessException("Could not save the book.", e);
         }
     }
 
@@ -70,7 +72,7 @@ public class BookDAO implements IBookDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not delete the book: " + e.getMessage(), e);
+            throw new DataAccessException("Could not delete the book.", e);
         }
     }
 
@@ -89,7 +91,7 @@ public class BookDAO implements IBookDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not read the book: " + e.getMessage(), e);
+            throw new DataAccessException("Could not read the book.", e);
         }
     }
 
@@ -113,7 +115,7 @@ public class BookDAO implements IBookDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not read the books: " + e.getMessage(), e);
+            throw new DataAccessException("Could not read the books.", e);
         }
     }
 
@@ -134,7 +136,7 @@ public class BookDAO implements IBookDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not read the book: " + e.getMessage(), e);
+            throw new DataAccessException("Could not read the book.", e);
         }
     }
 
@@ -163,7 +165,7 @@ public class BookDAO implements IBookDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not read the book: " + e.getMessage(), e);
+            throw new DataAccessException("Could not read the book.", e);
         }
     }
 }

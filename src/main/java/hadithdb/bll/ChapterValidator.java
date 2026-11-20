@@ -15,16 +15,11 @@ public class ChapterValidator {
         if (dto.getChapterNumber() <= 0) {
             throw new ValidationException("ChapterNumber", "Chapter number must be a positive integer.");
         }
-        checkNotBlank("Title", dto.getTitle());
+        TextRules.requiredName("Title", dto.getTitle());
+        TextRules.optionalText("Description", dto.getDescription());
 
         if (dal.isChapterNumberExists(dto.getBookId(), dto.getChapterNumber(), dto.getId())) {
             throw new ValidationException("ChapterNumber", "Chapter number " + dto.getChapterNumber() + " already exists in this book.");
-        }
-    }
-
-    private void checkNotBlank(String field, String value) {
-        if (value == null || value.trim().isEmpty()) {
-            throw new ValidationException(field, field + " must not be blank. Please enter a value.");
         }
     }
 }

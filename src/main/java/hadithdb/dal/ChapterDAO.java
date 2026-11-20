@@ -1,5 +1,7 @@
 package hadithdb.dal;
 
+import hadithdb.exception.DataAccessException;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -35,7 +37,7 @@ public class ChapterDAO implements IChapterDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not save the chapter: " + e.getMessage(), e);
+            throw new DataAccessException("Could not save the chapter.", e);
         }
     }
 
@@ -55,7 +57,7 @@ public class ChapterDAO implements IChapterDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not save the chapter: " + e.getMessage(), e);
+            throw new DataAccessException("Could not save the chapter.", e);
         }
     }
 
@@ -70,7 +72,7 @@ public class ChapterDAO implements IChapterDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not delete the chapter: " + e.getMessage(), e);
+            throw new DataAccessException("Could not delete the chapter.", e);
         }
     }
 
@@ -89,7 +91,7 @@ public class ChapterDAO implements IChapterDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not read the chapter: " + e.getMessage(), e);
+            throw new DataAccessException("Could not read the chapter.", e);
         }
     }
 
@@ -113,7 +115,7 @@ public class ChapterDAO implements IChapterDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not read the chapters: " + e.getMessage(), e);
+            throw new DataAccessException("Could not read the chapters.", e);
         }
     }
 
@@ -134,7 +136,7 @@ public class ChapterDAO implements IChapterDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not read the chapter: " + e.getMessage(), e);
+            throw new DataAccessException("Could not read the chapter.", e);
         }
     }
 
@@ -152,7 +154,7 @@ public class ChapterDAO implements IChapterDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not read the chapter: " + e.getMessage(), e);
+            throw new DataAccessException("Could not read the chapter.", e);
         }
     }
 

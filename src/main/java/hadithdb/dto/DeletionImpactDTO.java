@@ -5,6 +5,16 @@ import java.util.List;
 
 public class DeletionImpactDTO {
 
+    private int hadithAssociations;
+
+    public DeletionImpactDTO(int hadithAssociations) {
+        this.hadithAssociations = hadithAssociations;
+    }
+
+    public int getHadithAssociations() {
+        return hadithAssociations;
+    }
+
     private int books;
     private int chapters;
     private int glossaryEntries;
@@ -82,10 +92,17 @@ public class DeletionImpactDTO {
         if (translations > 0) {
             parts.add(translations + (translations == 1 ? " translation" : " translations"));
         }
+        if (hadithAssociations == 1) {
+            parts.add("1 hadith association");
+        }
+        if (hadithAssociations > 1) {
+            parts.add(hadithAssociations + " hadith associations");
+        }
         return String.join(", ", parts);
     }
 
     public boolean isEmpty() {
-        return books == 0 && chapters == 0 && glossaryEntries == 0 && hadith == 0 && translations == 0;
+        return books == 0 && chapters == 0 && glossaryEntries == 0 && hadith == 0 && translations == 0
+                && hadithAssociations == 0;
     }
 }
