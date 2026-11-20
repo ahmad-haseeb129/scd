@@ -14,6 +14,7 @@ target/
 
 # Eclipse default output folder
 bin/
+lib/
 
 # Documentation (Word files are not pushed)
 docs/
