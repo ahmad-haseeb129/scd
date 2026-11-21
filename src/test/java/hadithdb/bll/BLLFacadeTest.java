@@ -2,7 +2,9 @@ package hadithdb.bll;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -145,5 +147,12 @@ class BLLFacadeTest
         facade.changes().stopListening("topic", observer);
         facade.topics().saveTopic(new TopicDTO(0, "Second", null));
         assertEquals(2, changes.get());
+    }
+
+    @Test
+    void reader_isProvidedByTheFacadeAndIsTheSameInstanceEachTime()
+    {
+        assertNotNull(facade.reader());
+        assertSame(facade.reader(), facade.reader());
     }
 }

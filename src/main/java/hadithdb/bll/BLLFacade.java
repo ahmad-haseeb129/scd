@@ -16,6 +16,7 @@ public class BLLFacade {
     private final HadithNarratorBO hadithNarrators;
     private final HadithTopicBO hadithTopics;
     private final HadithGradeBO hadithGrades;
+    private final ReaderBO reader;
 
     public BLLFacade(IDALFacade dal) {
         collections = new CollectionBO(dal);
@@ -30,6 +31,7 @@ public class BLLFacade {
         hadithNarrators = new HadithNarratorBO(dal, dal);
         hadithTopics = new HadithTopicBO(dal, dal);
         hadithGrades = new HadithGradeBO(dal, dal);
+        reader = new ReaderBO(dal);
     }
 
     public CollectionBO collections() {
@@ -78,6 +80,10 @@ public class BLLFacade {
 
     public HadithGradeBO hadithGrades() {
         return hadithGrades;
+    }
+
+    public ReaderBO reader() {
+        return reader;
     }
 
     public DefinitionChanges changes() {

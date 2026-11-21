@@ -21,6 +21,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 import hadithdb.bll.BLLFacade;
@@ -36,6 +37,15 @@ public class MainWindow {
 
     private static final String NAV_IDLE = "-fx-background-color: transparent; -fx-text-fill: #1b2a3a;";
     private static final String NAV_HOVER = "-fx-background-color: #dde5ef; -fx-text-fill: #1b2a3a;";
+    private static final String ADMIN_MODE = "Admin\n"
+            + "\u0645\u0646\u062A\u0638\u0645";
+    private static final String READER_MODE = "Reader\n"
+            + "\u0642\u0627\u0631\u06CC";
+    private static final String BROWSE = "Browse / "
+            + "\u0628\u0631\u0627\u0624\u0632";
+    private static final String MODE_CAPTION = "Mode / "
+            + "\u0645\u0648\u0688";
+    private static final String MODE_IDLE = "-fx-text-fill: #1b2a3a;";
     private static final String NAV_ACTIVE = "-fx-base: #1f5fa8; -fx-text-fill: white; -fx-font-weight: bold;";
 
     private final Stage stage;
@@ -51,6 +61,12 @@ public class MainWindow {
     private final ToggleButton narratorsNav;
     private final ToggleButton topicsNav;
     private final ToggleButton gradesNav;
+    private final ToggleButton readerNav;
+    private final ReaderController reader;
+    private final VBox navBox = new VBox(6);
+    private final ToggleGroup modes = new ToggleGroup();
+    private final ToggleButton adminMode = new ToggleButton(ADMIN_MODE);
+    private final ToggleButton readerMode = new ToggleButton(READER_MODE);
 
     public MainWindow(Stage stage, BLLFacade business)
     {
@@ -64,6 +80,8 @@ public class MainWindow {
         narratorsNav = navButton("Narrators", this::showNarrators);
         topicsNav = navButton("Topics", this::showTopics);
         gradesNav = navButton("Grades", this::showGrades);
+        reader = new ReaderController(business.reader(), this);
+        readerNav = navButton(BROWSE, reader::showCollections);
 
         Label appTitle = new Label("Hadith Database");
         appTitle.setFont(Font.font(Font.getDefault().getFamily(), FontWeight.BOLD, 17));
@@ -74,7 +92,8 @@ public class MainWindow {
         exit.setMaxWidth(Double.MAX_VALUE);
         exit.setOnAction(e -> Platform.exit());
 
-        VBox sidebar = new VBox(6, appTitle, collectionsNav, narratorsNav, topicsNav, gradesNav,
+        navBox.getChildren().addAll(collectionsNav, narratorsNav, topicsNav, gradesNav);
+        VBox sidebar = new VBox(6, appTitle, buildModeSwitch(), navBox,
                 spacer, new Separator(), exit);
         sidebar.setPadding(new Insets(16, 12, 16, 12));
         sidebar.setPrefWidth(190);
@@ -135,7 +154,47 @@ public class MainWindow {
         show(gradesNav, new GradePanel(business.grades(), business.changes()), new ArrayList<>());
     }
 
+    /** Used by the reader (UC-08): shows a reader screen with its own breadcrumb trail. */
+    void showReaderPanel(Node panel, List<Crumb> trail) {
+        show(readerNav, panel, trail);
+    }
+
+    /** Administrator / Reader switch at the top of the sidebar. No login: the user switches directly. */
+    private VBox buildModeSwitch() {
+        Label caption = new Label(MODE_CAPTION);
+        caption.setStyle("-fx-text-fill: #5b6b7d; -fx-font-size: 11;");
+        adminMode.setToggleGroup(modes);
+        readerMode.setToggleGroup(modes);
+        // a toggle group lets the selected button be clicked off; keep one mode always selected
+        modes.selectedToggleProperty().addListener((o, was, now) -> {
+            if (now == null && was != null) {
+                was.setSelected(true);
+            }
+        });
+        for (ToggleButton button : new ToggleButton[] {adminMode, readerMode}) {
+            button.setMaxWidth(Double.MAX_VALUE);
+            button.setTextAlignment(TextAlignment.CENTER);
+            HBox.setHgrow(button, Priority.ALWAYS);
+            button.setStyle(MODE_IDLE);
+            button.selectedProperty().addListener((o, was, selected) -> button.setStyle(selected ? NAV_ACTIVE : MODE_IDLE));
+        }
+        adminMode.setOnAction(e -> showCollections());
+        readerMode.setOnAction(e -> reader.showCollections());
+        adminMode.setSelected(true);
+        HBox switcher = new HBox(0, adminMode, readerMode);
+        return new VBox(3, caption, switcher);
+    }
+
+    /** Shows the sidebar items of the current mode. Only changes what is shown, it does not navigate. */
+    private void setMode(boolean reading) {
+        (reading ? readerMode : adminMode).setSelected(true);
+        navBox.getChildren().setAll(reading
+                ? List.of(readerNav)
+                : List.of(collectionsNav, narratorsNav, topicsNav, gradesNav));
+    }
+
     private void show(ToggleButton section, Node panel, List<Crumb> trail) {
+        setMode(section == readerNav);
         nav.selectToggle(section);
         content.setCenter(panel);
         showCrumbs(trail);
@@ -232,11 +291,11 @@ public class MainWindow {
         return button;
     }
 
-    private static final class Crumb {
+    static final class Crumb {
         private final String text;
         private final Runnable go;
 
-        private Crumb(String text, Runnable go) {
+        Crumb(String text, Runnable go) {
             this.text = text;
             this.go = go;
         }
