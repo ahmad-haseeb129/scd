@@ -2,13 +2,7 @@ package hadithdb.pl;
 
 public class ClassificationLabels
 {
-    public static final String NEW = "New / نیا";
-    public static final String SAVE = "Save / محفوظ کریں";
     public static final String DELETE = "Delete / حذف کریں";
-    public static final String BACK = "Back / واپس";
-
-    public static final String MENU_MANAGE = "Manage / انتظام";
-    public static final String MENU_CLASSIFICATION = "Topics and Grades / موضوعات اور درجات";
 
     public static final String TOPICS = "Topics / موضوعات";
     public static final String GRADES = "Authenticity Grades / صحت کے درجات";

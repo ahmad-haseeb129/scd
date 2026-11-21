@@ -1,128 +1,109 @@
 package hadithdb.pl;
 
-import hadithdb.exception.LinksChangedException;
-
-import hadithdb.exception.DataAccessException;
-
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.table.DefaultTableModel;
-
-import hadithdb.bll.TopicBO;
-import hadithdb.bll.DefinitionChanges;
 import java.beans.PropertyChangeListener;
+import java.util.List;
+
+import javafx.geometry.Insets;
+import javafx.geometry.VPos;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+
+import hadithdb.bll.DefinitionChanges;
 import hadithdb.bll.IConfirmer;
+import hadithdb.bll.TopicBO;
 import hadithdb.bll.ValidationException;
 import hadithdb.dto.TopicDTO;
+import hadithdb.exception.DataAccessException;
+import hadithdb.exception.LinksChangedException;
 import hadithdb.exception.RecordNotFoundException;
 
-public class TopicPanel extends JPanel
+public class TopicPanel extends BorderPane
 {
-    private static final long serialVersionUID = 1L;
-
     private final TopicBO bo;
     private final DefinitionChanges changes;
     private final PropertyChangeListener observer = event -> reload();
     private final Font font = UiFonts.arabicCapable(14);
     private final IConfirmer confirmer;
 
-    private final DefaultTableModel tableModel = new DefaultTableModel(
-        new Object[] {"ID", "Name / نام"}, 0);
-    private final JTable table = new JTable(tableModel);
-    private final JTextField nameField = new JTextField(30);
-    private final JTextArea descriptionArea = new JTextArea(4, 30);
-    private final JLabel errorLabel = new JLabel(" ");
-    private final JButton deleteButton = new JButton(ClassificationLabels.DELETE);
+    private final TableView<TopicDTO> table = FxUi.table();
+    private final SearchTable<TopicDTO> rows;
+    private final TextField nameField = new TextField();
+    private final TextArea descriptionArea = new TextArea();
+    private final Label errorLabel = FxUi.errorLabel();
+    private final FormBar bar;
+    private int editingId;
 
-    public TopicPanel(TopicBO bo, DefinitionChanges changes, Runnable onBack)
+    public TopicPanel(TopicBO bo, DefinitionChanges changes)
     {
         this.bo = bo;
         this.changes = changes;
         this.confirmer = new ClassificationConfirmer(this, "Topic links / موضوع کے روابط");
 
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setDefaultEditor(Object.class, null);
-        UiText.table(table);
-        table.removeColumn(table.getColumnModel().getColumn(0));
-        table.getSelectionModel().addListSelectionListener(e ->
+        TableColumn<TopicDTO, String> nameColumn = FxUi.column("Name / نام", TopicDTO::getName);
+        UiText.column(nameColumn);
+        table.getColumns().add(nameColumn);
+        rows = new SearchTable<>(table, "No topics yet. Fill in the form below to add one. ابھی کوئی موضوع نہیں۔",
+                t -> SearchTable.join(t.getName(), t.getDescription()));
+        table.getSelectionModel().selectedItemProperty().addListener((o, was, now) ->
         {
-            if (!e.getValueIsAdjusting())
+            if (now != null)
             {
-                try
-                {
-                    onSelectionChanged();
-                }
-                catch (DataAccessException error)
-                {
-                    showDatabaseError(error);
-                }
+                edit(now.getId());
             }
         });
 
         UiText.field(nameField);
-        descriptionArea.setLineWrap(true);
-        descriptionArea.setWrapStyleWord(true);
+        descriptionArea.setPrefRowCount(4);
         UiText.description(descriptionArea);
-        errorLabel.setForeground(Color.RED);
+        errorLabel.setFont(font);
 
-        JButton newButton = new JButton(ClassificationLabels.NEW);
-        JButton saveButton = new JButton(ClassificationLabels.SAVE);
-        JButton backButton = new JButton(ClassificationLabels.BACK);
-        newButton.addActionListener(e -> onNew());
-        saveButton.addActionListener(e -> onSave());
-        deleteButton.addActionListener(e -> onDelete());
-        backButton.addActionListener(e -> onBack.run());
+        bar = new FormBar("topic", this::onSave, this::onDelete, this::clearForm)
+            .texts("New topic / نیا موضوع", "Add topic / موضوع شامل کریں", "Save changes / تبدیلیاں محفوظ کریں",
+                ClassificationLabels.DELETE, "Cancel / منسوخ کریں", "Editing / ترمیم: ")
+            .font(font);
+        bar.cancelOnEscape(this);
 
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        buttons.add(newButton);
-        buttons.add(saveButton);
-        buttons.add(deleteButton);
-        buttons.add(backButton);
+        setPadding(FxUi.PAGE_PADDING);
+        setTop(FxUi.pageHeader(ClassificationLabels.TOPICS, rows.field()));
+        setCenter(table);
+        setBottom(new VBox(8, bar.heading(), buildForm(), bar.bar()));
+        BorderPane.setMargin(table, new Insets(10, 0, 10, 0));
 
-        JPanel south = new JPanel(new BorderLayout(0, 8));
-        south.add(buildForm(), BorderLayout.CENTER);
-        south.add(buttons, BorderLayout.SOUTH);
-
-        JLabel heading = new JLabel(ClassificationLabels.TOPICS);
-        applyFont(heading, nameField, descriptionArea, errorLabel, newButton, saveButton, deleteButton, backButton);
-        heading.setFont(font.deriveFont(Font.BOLD, 18f));
-
-        setLayout(new BorderLayout(0, 10));
-        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        add(heading, BorderLayout.NORTH);
-        add(new JScrollPane(table), BorderLayout.CENTER);
-        add(south, BorderLayout.SOUTH);
-
+        sceneProperty().addListener((o, before, now) ->
+        {
+            if (now != null)
+            {
+                changes.listen("topic", observer);
+                reload();
+            }
+            else
+            {
+                changes.stopListening("topic", observer);
+            }
+        });
     }
 
     private void onSave()
     {
         errorLabel.setText(" ");
         TopicDTO topic = TopicDTO.builder()
-            .id(getSelectedId())
+            .id(editingId)
             .name(nameField.getText())
             .description(descriptionArea.getText())
             .build();
+        int savedId;
         try
         {
-            bo.saveTopic(topic);
+            savedId = bo.saveTopic(topic);
         }
         catch (ValidationException e)
         {
@@ -139,22 +120,23 @@ public class TopicPanel extends JPanel
             showDatabaseError(e);
             return;
         }
+        rows.reveal(t -> t.getId() == savedId);
+        bar.saved();
     }
 
     private void onDelete()
     {
-        int id = getSelectedId();
-        if (id == 0)
+        if (editingId == 0)
         {
             return;
         }
         try
         {
-            bo.deleteTopic(id, confirmer);
+            bo.deleteTopic(editingId, confirmer);
         }
         catch (LinksChangedException e)
         {
-            JOptionPane.showMessageDialog(this, e.getMessage(), "Review links / روابط", JOptionPane.WARNING_MESSAGE);
+            ErrorHandler.showWarning(this, "Review links / روابط", e.getMessage());
         }
         catch (RecordNotFoundException e)
         {
@@ -166,77 +148,44 @@ public class TopicPanel extends JPanel
         }
     }
 
-    private void onNew()
+    private void edit(int id)
     {
-        clearForm();
-        nameField.requestFocusInWindow();
-    }
-
-    private void onSelectionChanged()
-    {
-        int id = getSelectedId();
-        deleteButton.setEnabled(id != 0);
-        if (id == 0)
+        TopicDTO topic;
+        try
         {
+            topic = bo.getTopic(id);
+        }
+        catch (DataAccessException e)
+        {
+            showDatabaseError(e);
             return;
         }
-        TopicDTO topic = bo.getTopic(id);
         if (topic == null)
         {
-            loadTopics();
+            reload();
             return;
         }
+        editingId = id;
         nameField.setText(topic.getName());
         descriptionArea.setText(topic.getDescription());
         errorLabel.setText(" ");
-    }
-
-    @Override
-    public void addNotify()
-    {
-        super.addNotify();
-        changes.listen("topic", observer);
-        reload();
-    }
-
-    @Override
-    public void removeNotify()
-    {
-        changes.stopListening("topic", observer);
-        super.removeNotify();
+        bar.editMode(topic.getName());
     }
 
     private void reload()
     {
+        List<TopicDTO> records;
         try
         {
-            loadTopics();
+            records = bo.listTopics();
         }
         catch (DataAccessException error)
         {
             showDatabaseError(error);
+            return;
         }
-    }
-
-    private void loadTopics()
-    {
-        java.util.List<TopicDTO> records = bo.listTopics();
-        tableModel.setRowCount(0);
-        for (TopicDTO topic : records)
-        {
-            tableModel.addRow(new Object[] {topic.getId(), topic.getName()});
-        }
+        rows.setAll(records);
         clearForm();
-    }
-
-    private int getSelectedId()
-    {
-        int row = table.getSelectedRow();
-        if (row < 0)
-        {
-            return 0;
-        }
-        return (Integer) tableModel.getValueAt(row, 0);
     }
 
     private void showFieldError(String field, String message)
@@ -244,68 +193,50 @@ public class TopicPanel extends JPanel
         errorLabel.setText(message);
         if ("Name".equals(field))
         {
-            nameField.requestFocusInWindow();
+            nameField.requestFocus();
         }
         else if ("Description".equals(field))
         {
-            descriptionArea.requestFocusInWindow();
+            descriptionArea.requestFocus();
         }
     }
 
     private void showNotFound(RecordNotFoundException e)
     {
-        JOptionPane.showMessageDialog(this, e.getMessage(), ClassificationLabels.NOT_FOUND_TITLE,
-            JOptionPane.WARNING_MESSAGE);
+        ErrorHandler.showWarning(this, ClassificationLabels.NOT_FOUND_TITLE, e.getMessage());
     }
 
     private void showDatabaseError(DataAccessException e)
     {
-        JOptionPane.showMessageDialog(this, e.getMessage(), ClassificationLabels.DATABASE_ERROR_TITLE,
-            JOptionPane.ERROR_MESSAGE);
+        ErrorHandler.showError(this, ClassificationLabels.DATABASE_ERROR_TITLE, e.getMessage());
     }
 
     private void clearForm()
     {
-        table.clearSelection();
+        editingId = 0;
+        table.getSelectionModel().clearSelection();
         nameField.setText("");
         descriptionArea.setText("");
         errorLabel.setText(" ");
-        deleteButton.setEnabled(false);
+        bar.addMode();
     }
 
-    private JPanel buildForm()
+    private GridPane buildForm()
     {
-        JPanel form = new JPanel(new GridBagLayout());
+        GridPane form = FxUi.form();
         addRow(form, 0, ClassificationLabels.TOPIC_NAME, nameField);
-        GridBagConstraints errorPlace = new GridBagConstraints();
-        errorPlace.gridx = 1;
-        errorPlace.gridy = 1;
-        errorPlace.anchor = GridBagConstraints.WEST;
-        form.add(errorLabel, errorPlace);
-        addRow(form, 2, ClassificationLabels.TOPIC_DESCRIPTION, new JScrollPane(descriptionArea));
+        form.add(errorLabel, 1, 1);
+        addRow(form, 2, ClassificationLabels.TOPIC_DESCRIPTION, descriptionArea);
         return form;
     }
 
-    private void addRow(JPanel form, int row, String label, JComponent field)
+    private void addRow(GridPane form, int row, String label, Node field)
     {
-        JLabel caption = new JLabel(label);
+        Label caption = new Label(label);
         caption.setFont(font);
-        GridBagConstraints c = new GridBagConstraints();
-        c.gridy = row;
-        c.insets = new Insets(3, 3, 3, 3);
-        c.anchor = GridBagConstraints.NORTHWEST;
-        form.add(caption, c);
-        c.gridx = 1;
-        c.weightx = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        form.add(field, c);
-    }
-
-    private void applyFont(JComponent... components)
-    {
-        for (JComponent component : components)
-        {
-            component.setFont(font);
-        }
+        GridPane.setValignment(caption, VPos.TOP);
+        form.add(caption, 0, row);
+        form.add(field, 1, row);
+        GridPane.setHgrow(field, Priority.ALWAYS);
     }
 }

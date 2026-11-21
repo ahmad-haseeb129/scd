@@ -1,7 +1,7 @@
 # Maven build output
 target/
 
-# Eclipse/ IntelliJ files (re-created by the import)
+# Eclipse / IntelliJ files (re-created by the import)
 .classpath
 .project
 .settings/

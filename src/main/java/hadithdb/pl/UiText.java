@@ -1,69 +1,65 @@
 package hadithdb.pl;
 
-import java.awt.Component;
-import java.awt.ComponentOrientation;
-import java.awt.KeyboardFocusManager;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
 import java.text.Bidi;
-import java.util.Collections;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.text.JTextComponent;
 
-class UiText {
-    static void field(JTextComponent field) {
-        field.setFont(UiFonts.arabicCapable(14));
-        field.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent change) {
-                updateDirection();
-            }
+import javafx.geometry.NodeOrientation;
+import javafx.geometry.Pos;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextInputControl;
+import javafx.scene.text.Font;
 
-            public void removeUpdate(DocumentEvent change) {
-                updateDirection();
-            }
+final class UiText
+{
+    private static final double SIZE = 15;
 
-            public void changedUpdate(DocumentEvent change) {
-            }
-
-            private void updateDirection() {
-                SwingUtilities.invokeLater(() -> field.setComponentOrientation(direction(field.getText())));
-            }
-        });
+    private UiText()
+    {
     }
 
-    static void description(JTextArea area) {
+    static void field(TextInputControl field)
+    {
+        field.setFont(UiFonts.arabicCapable(SIZE));
+        field.setNodeOrientation(direction(field.getText()));
+        field.textProperty().addListener((source, before, now) -> field.setNodeOrientation(direction(now)));
+    }
+
+    static void description(TextArea area)
+    {
         field(area);
-        area.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,
-            Collections.singleton(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0)));
-        area.setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS,
-            Collections.singleton(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, InputEvent.SHIFT_DOWN_MASK)));
+        area.setWrapText(true);
+        UiFonts.makeTabMoveFocus(area);
     }
 
-    static void table(JTable table) {
-        table.setFont(UiFonts.arabicCapable(14));
-        table.setRowHeight(26);
-        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            public Component getTableCellRendererComponent(JTable source, Object value,
-                    boolean selected, boolean focus, int row, int column) {
-                super.getTableCellRendererComponent(source, value, selected, focus, row, column);
-                setComponentOrientation(direction(getText()));
-                setHorizontalAlignment(LEADING);
-                return this;
+    static <T> void column(TableColumn<T, String> column)
+    {
+        Font font = UiFonts.arabicCapable(SIZE);
+        column.setCellFactory(source -> new TableCell<T, String>()
+        {
+            {
+                setFont(font);
+            }
+
+            @Override
+            protected void updateItem(String item, boolean empty)
+            {
+                super.updateItem(item, empty);
+                setText(empty ? null : item);
+                NodeOrientation orientation = direction(empty ? null : item);
+                setNodeOrientation(orientation);
+                setAlignment(orientation == NodeOrientation.RIGHT_TO_LEFT ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
             }
         });
     }
 
-    private static ComponentOrientation direction(String text) {
-        Bidi bidi = new Bidi(text, Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
-        if (bidi.baseIsLeftToRight()) {
-            return ComponentOrientation.LEFT_TO_RIGHT;
+    static NodeOrientation direction(String text)
+    {
+        if (text == null || text.isEmpty())
+        {
+            return NodeOrientation.LEFT_TO_RIGHT;
         }
-        return ComponentOrientation.RIGHT_TO_LEFT;
+        Bidi bidi = new Bidi(text, Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
+        return bidi.baseIsLeftToRight() ? NodeOrientation.LEFT_TO_RIGHT : NodeOrientation.RIGHT_TO_LEFT;
     }
 }

@@ -1,103 +1,79 @@
 package hadithdb.pl;
 
-import hadithdb.exception.RecordNotFoundException;
+import java.util.List;
 
-import hadithdb.exception.DataAccessException;
-
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.table.DefaultTableModel;
+import javafx.geometry.Insets;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 
 import hadithdb.bll.ChapterBO;
 import hadithdb.bll.IConfirmer;
 import hadithdb.bll.ValidationException;
 import hadithdb.dto.ChapterDTO;
+import hadithdb.exception.DataAccessException;
+import hadithdb.exception.RecordNotFoundException;
 
-public class ChapterPanel extends JPanel {
-
-    private static final long serialVersionUID = 1L;
+public class ChapterPanel extends BorderPane {
 
     private final ChapterBO bo;
     private final MainWindow window;
     private final int bookId;
 
-    private final DefaultTableModel tableModel = new DefaultTableModel(
-            new Object[] {"ID", "Number", "Title"}, 0);
-    private final JTable table = new JTable(tableModel);
-    private final JTextField numberField = new JTextField(10);
-    private final JTextField titleField = new JTextField(30);
-    private final JTextArea descriptionArea = new JTextArea(4, 30);
-    private final JLabel errorLabel = new JLabel(" ");
-    private final JButton deleteButton = new JButton("Delete");
-    private final JButton openHadithButton = new JButton("Open Hadith");
-    private final JButton openGlossaryButton = new JButton("Open Glossary");
+    private final TableView<ChapterDTO> table = FxUi.table();
+    private final SearchTable<ChapterDTO> rows;
+    private final TextField numberField = new TextField();
+    private final TextField titleField = new TextField();
+    private final TextArea descriptionArea = new TextArea();
+    private final Label errorLabel = FxUi.errorLabel();
+    private final FormBar bar;
+    private int editingId;
 
-    public ChapterPanel(ChapterBO bo, MainWindow window, int bookId, Runnable onBack) {
+    public ChapterPanel(ChapterBO bo, MainWindow window, int bookId) {
         this.bo = bo;
         this.window = window;
         this.bookId = bookId;
 
-        UiText.table(table);
-        UiText.field(titleField);
-        UiText.description(descriptionArea);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setDefaultEditor(Object.class, null);
-        table.getSelectionModel().addListSelectionListener(event -> {
-            if (!event.getValueIsAdjusting()) {
-                try {
-                    onSelectionChanged();
-                } catch (DataAccessException e) {
-                    showDatabaseError(e);
-                }
+        table.getColumns().add(FxUi.column("Number", (ChapterDTO c) -> String.valueOf(c.getChapterNumber())));
+        TableColumn<ChapterDTO, String> titleColumn = FxUi.column("Title", ChapterDTO::getTitle);
+        UiText.column(titleColumn);
+        table.getColumns().add(titleColumn);
+        rows = new SearchTable<>(table, "This book has no chapters yet. Fill in the form below to add one.",
+                c -> SearchTable.join(c.getChapterNumber(), c.getTitle()));
+        table.getSelectionModel().selectedItemProperty().addListener((o, was, now) -> {
+            if (now != null) {
+                edit(now.getId());
             }
         });
-        descriptionArea.setLineWrap(true);
-        descriptionArea.setWrapStyleWord(true);
-        errorLabel.setForeground(Color.RED);
+        table.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2 && editingId != 0) {
+                window.showHadith(editingId);
+            }
+        });
 
-        JButton newButton = new JButton("New");
-        JButton saveButton = new JButton("Save");
-        JButton backButton = new JButton("Back to Books");
-        newButton.addActionListener(e -> onNew());
-        saveButton.addActionListener(e -> onSave());
-        deleteButton.addActionListener(e -> onDelete());
-        openHadithButton.addActionListener(e -> window.showHadith(getSelectedId()));
-        openGlossaryButton.addActionListener(e -> window.showChapterGlossary(getSelectedId()));
-        backButton.addActionListener(e -> onBack.run());
+        UiText.field(titleField);
+        descriptionArea.setPrefRowCount(4);
+        UiText.description(descriptionArea);
 
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        buttons.add(newButton);
-        buttons.add(saveButton);
-        buttons.add(deleteButton);
-        buttons.add(openHadithButton);
-        buttons.add(openGlossaryButton);
-        buttons.add(backButton);
+        bar = new FormBar("chapter", this::onSave, this::onDelete, this::clearForm);
+        Button openHadith = new Button("Open Hadith");
+        Button openGlossary = new Button("Open glossary");
+        openHadith.setOnAction(e -> window.showHadith(editingId));
+        openGlossary.setOnAction(e -> window.showChapterGlossary(editingId));
+        bar.extras(openHadith, openGlossary);
+        bar.cancelOnEscape(this);
 
-        JPanel south = new JPanel(new BorderLayout(0, 8));
-        south.add(buildForm(), BorderLayout.CENTER);
-        south.add(buttons, BorderLayout.SOUTH);
-
-        setLayout(new BorderLayout(0, 10));
-        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        add(new JLabel("Chapters"), BorderLayout.NORTH);
-        add(new JScrollPane(table), BorderLayout.CENTER);
-        add(south, BorderLayout.SOUTH);
+        setPadding(FxUi.PAGE_PADDING);
+        setTop(FxUi.pageHeader("Chapters", rows.field()));
+        setCenter(table);
+        setBottom(new VBox(8, bar.heading(), buildForm(), bar.bar()));
+        BorderPane.setMargin(table, new Insets(10, 0, 10, 0));
 
         loadChapters();
     }
@@ -109,132 +85,100 @@ public class ChapterPanel extends JPanel {
             number = Integer.parseInt(numberField.getText().trim());
         } catch (NumberFormatException e) {
             errorLabel.setText("Chapter number must be a whole number. Please enter a value like 1.");
-            numberField.requestFocusInWindow();
+            numberField.requestFocus();
             return;
         }
-        ChapterDTO dto = new ChapterDTO(getSelectedId(), bookId, number,
-                titleField.getText(), descriptionArea.getText());
+        ChapterDTO dto = new ChapterDTO(editingId, bookId, number, titleField.getText(), descriptionArea.getText());
+        int savedId;
         try {
-            bo.saveChapter(dto);
+            savedId = bo.saveChapter(dto);
         } catch (ValidationException e) {
             showError(e);
             return;
         } catch (RecordNotFoundException e) {
-            JOptionPane.showMessageDialog(this, e.getMessage(), "Record not found", JOptionPane.WARNING_MESSAGE);
+            ErrorHandler.showNotFound(this, e);
             return;
         } catch (DataAccessException e) {
-            showDatabaseError(e);
+            ErrorHandler.showDatabase(this, e);
             return;
         }
         loadChapters();
+        rows.reveal(c -> c.getId() == savedId);
+        bar.saved();
     }
 
     private void onDelete() {
-        int id = getSelectedId();
-        IConfirmer confirmer = new SwingConfirmer(this);
+        IConfirmer confirmer = new FxConfirmer(this);
         try {
-            if (bo.deleteChapter(id, confirmer)) {
+            if (bo.deleteChapter(editingId, confirmer)) {
                 loadChapters();
             }
         } catch (RecordNotFoundException e) {
-            JOptionPane.showMessageDialog(this, e.getMessage(), "Record not found", JOptionPane.WARNING_MESSAGE);
-            return;
+            ErrorHandler.showNotFound(this, e);
         } catch (DataAccessException e) {
-            showDatabaseError(e);
+            ErrorHandler.showDatabase(this, e);
         }
     }
 
-    private void onNew() {
-        clearForm();
-        numberField.requestFocusInWindow();
-    }
-
-    private void onSelectionChanged() {
-        int id = getSelectedId();
-        deleteButton.setEnabled(id != 0);
-        openHadithButton.setEnabled(id != 0);
-        openGlossaryButton.setEnabled(id != 0);
-        if (id != 0) {
-            ChapterDTO dto = bo.getChapter(id);
-            if (dto == null) {
-                return;
-            }
-            numberField.setText(String.valueOf(dto.getChapterNumber()));
-            titleField.setText(dto.getTitle());
-            descriptionArea.setText(dto.getDescription());
-            errorLabel.setText(" ");
+    private void edit(int id) {
+        ChapterDTO dto;
+        try {
+            dto = bo.getChapter(id);
+        } catch (DataAccessException e) {
+            ErrorHandler.showDatabase(this, e);
+            return;
         }
+        if (dto == null) {
+            loadChapters();
+            return;
+        }
+        editingId = id;
+        numberField.setText(String.valueOf(dto.getChapterNumber()));
+        titleField.setText(dto.getTitle());
+        descriptionArea.setText(dto.getDescription());
+        errorLabel.setText(" ");
+        bar.editMode("Chapter " + dto.getChapterNumber() + ": " + dto.getTitle());
     }
 
     private void loadChapters() {
+        List<ChapterDTO> records;
         try {
-            java.util.List<ChapterDTO> records = bo.listChapters(bookId);
-            tableModel.setRowCount(0);
-            for (ChapterDTO dto : records) {
-                tableModel.addRow(new Object[] {dto.getId(), dto.getChapterNumber(), dto.getTitle()});
-            }
-            clearForm();
+            records = bo.listChapters(bookId);
         } catch (DataAccessException e) {
-            showDatabaseError(e);
+            ErrorHandler.showDatabase(this, e);
+            return;
         }
-    }
-
-    private int getSelectedId() {
-        int row = table.getSelectedRow();
-        if (row < 0) {
-            return 0;
-        }
-        return (Integer) tableModel.getValueAt(row, 0);
+        rows.setAll(records);
+        clearForm();
     }
 
     private void showError(ValidationException e) {
         errorLabel.setText(e.getMessage());
         if ("ChapterNumber".equals(e.getField())) {
-            numberField.requestFocusInWindow();
+            numberField.requestFocus();
         } else if ("Title".equals(e.getField())) {
-            titleField.requestFocusInWindow();
+            titleField.requestFocus();
         } else if ("Description".equals(e.getField())) {
-            descriptionArea.requestFocusInWindow();
+            descriptionArea.requestFocus();
         }
     }
 
-    private void showDatabaseError(DataAccessException e) {
-        JOptionPane.showMessageDialog(this, e.getMessage(), "Database error", JOptionPane.ERROR_MESSAGE);
-    }
-
     private void clearForm() {
-        table.clearSelection();
+        editingId = 0;
+        table.getSelectionModel().clearSelection();
         numberField.setText("");
         titleField.setText("");
         descriptionArea.setText("");
         errorLabel.setText(" ");
-        deleteButton.setEnabled(false);
-        openHadithButton.setEnabled(false);
-        openGlossaryButton.setEnabled(false);
+        bar.addMode();
     }
 
-    private JPanel buildForm() {
-        JPanel form = new JPanel(new GridBagLayout());
-        addRow(form, 0, "Number *", numberField);
-        addRow(form, 1, "Title *", titleField);
-        GridBagConstraints errorPlace = new GridBagConstraints();
-        errorPlace.gridx = 1;
-        errorPlace.gridy = 2;
-        errorPlace.anchor = GridBagConstraints.WEST;
-        form.add(errorLabel, errorPlace);
-        addRow(form, 3, "Description", new JScrollPane(descriptionArea));
+    private GridPane buildForm() {
+        GridPane form = FxUi.form();
+        FxUi.addRow(form, 0, "Number *", numberField);
+        FxUi.addRow(form, 1, "Title *", titleField);
+        form.add(errorLabel, 1, 2);
+        FxUi.addRow(form, 3, "Description", descriptionArea);
         return form;
-    }
-
-    private void addRow(JPanel form, int row, String label, JComponent field) {
-        GridBagConstraints c = new GridBagConstraints();
-        c.gridy = row;
-        c.insets = new Insets(3, 3, 3, 3);
-        c.anchor = GridBagConstraints.NORTHWEST;
-        form.add(new JLabel(label), c);
-        c.gridx = 1;
-        c.weightx = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        form.add(field, c);
     }
 }

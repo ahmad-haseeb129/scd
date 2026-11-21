@@ -1,3 +1,4 @@
+
 package hadithdb.dal;
 
 public interface IDAOFactory {
@@ -21,4 +22,12 @@ public interface IDAOFactory {
     IGradeDefinitionDAO createGradeDefinitionDAO();
 
     IClassificationImpactDAO createClassificationImpactDAO();
+
+    INarratorDAO createNarratorDAO();
+
+    IHadithNarratorDAO createHadithNarratorDAO();
+
+    IHadithTopicDAO createHadithTopicDAO();
+
+    IHadithGradeDAO createHadithGradeDAO();
 }

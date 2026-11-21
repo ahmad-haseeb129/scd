@@ -51,4 +51,24 @@ public class MySQLDAOFactory extends AbstractDAOFactory {
     public IClassificationImpactDAO createClassificationImpactDAO() {
         return new ClassificationImpactDAO();
     }
+
+    @Override
+    public INarratorDAO createNarratorDAO() {
+        return new NarratorDAO();
+    }
+    
+    @Override
+    public IHadithNarratorDAO createHadithNarratorDAO() {
+        return new HadithNarratorDAO();
+    }
+
+    @Override
+    public IHadithTopicDAO createHadithTopicDAO() {
+        return new HadithTopicDAO();
+    }
+
+    @Override
+    public IHadithGradeDAO createHadithGradeDAO() {
+        return new HadithGradeDAO();
+    }
 }

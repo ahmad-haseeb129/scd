@@ -7,10 +7,16 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import hadithdb.dto.CollectionDTO;
+import hadithdb.exception.ConstraintViolationException;
+import hadithdb.exception.DataAccessException;
 
 public class CollectionDAO implements ICollectionDAO {
+
+    private static final Logger LOG = Logger.getLogger(CollectionDAO.class.getName());
 
     private static final String COLUMNS = "id, name, compiler, description, edition, publication_info";
 
@@ -31,7 +37,7 @@ public class CollectionDAO implements ICollectionDAO {
                 return keys.getInt(1);
             }
         } catch (SQLException e) {
-            throw new IllegalStateException("Could not save the collection: " + e.getMessage(), e);
+            throw failure("Could not save the collection.", e);
         }
     }
 
@@ -49,7 +55,7 @@ public class CollectionDAO implements ICollectionDAO {
             statement.setInt(6, dto.getId());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new IllegalStateException("Could not save the collection: " + e.getMessage(), e);
+            throw failure("Could not save the collection.", e);
         }
     }
 
@@ -63,7 +69,7 @@ public class CollectionDAO implements ICollectionDAO {
                 return rows.next() ? toDTO(rows) : null;
             }
         } catch (SQLException e) {
-            throw new IllegalStateException("Could not read the collection: " + e.getMessage(), e);
+            throw failure("Could not read the collection.", e);
         }
     }
 
@@ -79,7 +85,7 @@ public class CollectionDAO implements ICollectionDAO {
             }
             return collections;
         } catch (SQLException e) {
-            throw new IllegalStateException("Could not read the collections: " + e.getMessage(), e);
+            throw failure("Could not read the collections.", e);
         }
     }
 
@@ -90,7 +96,7 @@ public class CollectionDAO implements ICollectionDAO {
             statement.setInt(1, id);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new IllegalStateException("Could not delete the collection: " + e.getMessage(), e);
+            throw failure("Could not delete the collection.", e);
         }
     }
 
@@ -103,8 +109,17 @@ public class CollectionDAO implements ICollectionDAO {
                 return rows.next();
             }
         } catch (SQLException e) {
-            throw new IllegalStateException("Could not read the collection: " + e.getMessage(), e);
+            throw failure("Could not read the collection.", e);
         }
+    }
+
+    private DataAccessException failure(String what, SQLException e) {
+        LOG.log(Level.SEVERE, what, e);
+        String sqlState = e.getSQLState();
+        if (sqlState != null && sqlState.startsWith("23")) {
+            return new ConstraintViolationException(e);
+        }
+        return new DataAccessException(what + " Please check that the database is running and try again.", e);
     }
 
     private CollectionDTO toDTO(ResultSet row) throws SQLException {

@@ -1,103 +1,79 @@
 package hadithdb.pl;
 
-import hadithdb.exception.RecordNotFoundException;
+import java.util.List;
 
-import hadithdb.exception.DataAccessException;
-
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.table.DefaultTableModel;
+import javafx.geometry.Insets;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 
 import hadithdb.bll.BookBO;
 import hadithdb.bll.IConfirmer;
 import hadithdb.bll.ValidationException;
 import hadithdb.dto.BookDTO;
+import hadithdb.exception.DataAccessException;
+import hadithdb.exception.RecordNotFoundException;
 
-public class BookPanel extends JPanel {
-
-    private static final long serialVersionUID = 1L;
+public class BookPanel extends BorderPane {
 
     private final BookBO bo;
     private final MainWindow window;
     private final int collectionId;
 
-    private final DefaultTableModel tableModel = new DefaultTableModel(
-            new Object[] {"ID", "Number", "Title"}, 0);
-    private final JTable table = new JTable(tableModel);
-    private final JTextField numberField = new JTextField(10);
-    private final JTextField titleField = new JTextField(30);
-    private final JTextArea descriptionArea = new JTextArea(4, 30);
-    private final JLabel errorLabel = new JLabel(" ");
-    private final JButton deleteButton = new JButton("Delete");
-    private final JButton openChaptersButton = new JButton("Open Chapters");
-    private final JButton openGlossaryButton = new JButton("Open Glossary");
+    private final TableView<BookDTO> table = FxUi.table();
+    private final SearchTable<BookDTO> rows;
+    private final TextField numberField = new TextField();
+    private final TextField titleField = new TextField();
+    private final TextArea descriptionArea = new TextArea();
+    private final Label errorLabel = FxUi.errorLabel();
+    private final FormBar bar;
+    private int editingId;
 
     public BookPanel(BookBO bo, MainWindow window, int collectionId) {
         this.bo = bo;
         this.window = window;
         this.collectionId = collectionId;
 
-        UiText.table(table);
-        UiText.field(titleField);
-        UiText.description(descriptionArea);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setDefaultEditor(Object.class, null);
-        table.getSelectionModel().addListSelectionListener(event -> {
-            if (!event.getValueIsAdjusting()) {
-                try {
-                    onSelectionChanged();
-                } catch (DataAccessException e) {
-                    showDatabaseError(e);
-                }
+        table.getColumns().add(FxUi.column("Number", (BookDTO b) -> String.valueOf(b.getBookNumber())));
+        TableColumn<BookDTO, String> titleColumn = FxUi.column("Title", BookDTO::getTitle);
+        UiText.column(titleColumn);
+        table.getColumns().add(titleColumn);
+        rows = new SearchTable<>(table, "This collection has no books yet. Fill in the form below to add one.",
+                b -> SearchTable.join(b.getBookNumber(), b.getTitle()));
+        table.getSelectionModel().selectedItemProperty().addListener((o, was, now) -> {
+            if (now != null) {
+                edit(now.getId());
             }
         });
-        descriptionArea.setLineWrap(true);
-        descriptionArea.setWrapStyleWord(true);
-        errorLabel.setForeground(Color.RED);
+        table.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2 && editingId != 0) {
+                window.showChapters(editingId);
+            }
+        });
 
-        JButton newButton = new JButton("New");
-        JButton saveButton = new JButton("Save");
-        JButton backButton = new JButton("Back to Collections");
-        newButton.addActionListener(e -> onNew());
-        saveButton.addActionListener(e -> onSave());
-        deleteButton.addActionListener(e -> onDelete());
-        openChaptersButton.addActionListener(e -> window.showChapters(getSelectedId()));
-        openGlossaryButton.addActionListener(e -> window.showBookGlossary(getSelectedId()));
-        backButton.addActionListener(e -> window.showCollections());
+        UiText.field(titleField);
+        descriptionArea.setPrefRowCount(4);
+        UiText.description(descriptionArea);
 
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        buttons.add(newButton);
-        buttons.add(saveButton);
-        buttons.add(deleteButton);
-        buttons.add(openChaptersButton);
-        buttons.add(openGlossaryButton);
-        buttons.add(backButton);
+        bar = new FormBar("book", this::onSave, this::onDelete, this::clearForm);
+        Button openChapters = new Button("Open chapters");
+        Button openGlossary = new Button("Open glossary");
+        openChapters.setOnAction(e -> window.showChapters(editingId));
+        openGlossary.setOnAction(e -> window.showBookGlossary(editingId));
+        bar.extras(openChapters, openGlossary);
+        bar.cancelOnEscape(this);
 
-        JPanel south = new JPanel(new BorderLayout(0, 8));
-        south.add(buildForm(), BorderLayout.CENTER);
-        south.add(buttons, BorderLayout.SOUTH);
-
-        setLayout(new BorderLayout(0, 10));
-        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        add(new JLabel("Books"), BorderLayout.NORTH);
-        add(new JScrollPane(table), BorderLayout.CENTER);
-        add(south, BorderLayout.SOUTH);
+        setPadding(FxUi.PAGE_PADDING);
+        setTop(FxUi.pageHeader("Books", rows.field()));
+        setCenter(table);
+        setBottom(new VBox(8, bar.heading(), buildForm(), bar.bar()));
+        BorderPane.setMargin(table, new Insets(10, 0, 10, 0));
 
         loadBooks();
     }
@@ -109,132 +85,100 @@ public class BookPanel extends JPanel {
             number = Integer.parseInt(numberField.getText().trim());
         } catch (NumberFormatException e) {
             errorLabel.setText("Book number must be a whole number. Please enter a value like 1.");
-            numberField.requestFocusInWindow();
+            numberField.requestFocus();
             return;
         }
-        BookDTO dto = new BookDTO(getSelectedId(), collectionId, number,
-                titleField.getText(), descriptionArea.getText());
+        BookDTO dto = new BookDTO(editingId, collectionId, number, titleField.getText(), descriptionArea.getText());
+        int savedId;
         try {
-            bo.saveBook(dto);
+            savedId = bo.saveBook(dto);
         } catch (ValidationException e) {
             showError(e);
             return;
         } catch (RecordNotFoundException e) {
-            JOptionPane.showMessageDialog(this, e.getMessage(), "Record not found", JOptionPane.WARNING_MESSAGE);
+            ErrorHandler.showNotFound(this, e);
             return;
         } catch (DataAccessException e) {
-            showDatabaseError(e);
+            ErrorHandler.showDatabase(this, e);
             return;
         }
         loadBooks();
+        rows.reveal(b -> b.getId() == savedId);
+        bar.saved();
     }
 
     private void onDelete() {
-        int id = getSelectedId();
-        IConfirmer confirmer = new SwingConfirmer(this);
+        IConfirmer confirmer = new FxConfirmer(this);
         try {
-            if (bo.deleteBook(id, confirmer)) {
+            if (bo.deleteBook(editingId, confirmer)) {
                 loadBooks();
             }
         } catch (RecordNotFoundException e) {
-            JOptionPane.showMessageDialog(this, e.getMessage(), "Record not found", JOptionPane.WARNING_MESSAGE);
-            return;
+            ErrorHandler.showNotFound(this, e);
         } catch (DataAccessException e) {
-            showDatabaseError(e);
+            ErrorHandler.showDatabase(this, e);
         }
     }
 
-    private void onNew() {
-        clearForm();
-        numberField.requestFocusInWindow();
-    }
-
-    private void onSelectionChanged() {
-        int id = getSelectedId();
-        deleteButton.setEnabled(id != 0);
-        openChaptersButton.setEnabled(id != 0);
-        openGlossaryButton.setEnabled(id != 0);
-        if (id != 0) {
-            BookDTO dto = bo.getBook(id);
-            if (dto == null) {
-                return;
-            }
-            numberField.setText(String.valueOf(dto.getBookNumber()));
-            titleField.setText(dto.getTitle());
-            descriptionArea.setText(dto.getDescription());
-            errorLabel.setText(" ");
+    private void edit(int id) {
+        BookDTO dto;
+        try {
+            dto = bo.getBook(id);
+        } catch (DataAccessException e) {
+            ErrorHandler.showDatabase(this, e);
+            return;
         }
+        if (dto == null) {
+            loadBooks();
+            return;
+        }
+        editingId = id;
+        numberField.setText(String.valueOf(dto.getBookNumber()));
+        titleField.setText(dto.getTitle());
+        descriptionArea.setText(dto.getDescription());
+        errorLabel.setText(" ");
+        bar.editMode("Book " + dto.getBookNumber() + ": " + dto.getTitle());
     }
 
     private void loadBooks() {
+        List<BookDTO> records;
         try {
-            java.util.List<BookDTO> records = bo.listBooks(collectionId);
-            tableModel.setRowCount(0);
-            for (BookDTO dto : records) {
-                tableModel.addRow(new Object[] {dto.getId(), dto.getBookNumber(), dto.getTitle()});
-            }
-            clearForm();
+            records = bo.listBooks(collectionId);
         } catch (DataAccessException e) {
-            showDatabaseError(e);
+            ErrorHandler.showDatabase(this, e);
+            return;
         }
-    }
-
-    private int getSelectedId() {
-        int row = table.getSelectedRow();
-        if (row < 0) {
-            return 0;
-        }
-        return (Integer) tableModel.getValueAt(row, 0);
+        rows.setAll(records);
+        clearForm();
     }
 
     private void showError(ValidationException e) {
         errorLabel.setText(e.getMessage());
         if ("BookNumber".equals(e.getField())) {
-            numberField.requestFocusInWindow();
+            numberField.requestFocus();
         } else if ("Title".equals(e.getField())) {
-            titleField.requestFocusInWindow();
+            titleField.requestFocus();
         } else if ("Description".equals(e.getField())) {
-            descriptionArea.requestFocusInWindow();
+            descriptionArea.requestFocus();
         }
     }
 
-    private void showDatabaseError(DataAccessException e) {
-        JOptionPane.showMessageDialog(this, e.getMessage(), "Database error", JOptionPane.ERROR_MESSAGE);
-    }
-
     private void clearForm() {
-        table.clearSelection();
+        editingId = 0;
+        table.getSelectionModel().clearSelection();
         numberField.setText("");
         titleField.setText("");
         descriptionArea.setText("");
         errorLabel.setText(" ");
-        deleteButton.setEnabled(false);
-        openChaptersButton.setEnabled(false);
-        openGlossaryButton.setEnabled(false);
+        bar.addMode();
     }
 
-    private JPanel buildForm() {
-        JPanel form = new JPanel(new GridBagLayout());
-        addRow(form, 0, "Number *", numberField);
-        addRow(form, 1, "Title *", titleField);
-        GridBagConstraints errorPlace = new GridBagConstraints();
-        errorPlace.gridx = 1;
-        errorPlace.gridy = 2;
-        errorPlace.anchor = GridBagConstraints.WEST;
-        form.add(errorLabel, errorPlace);
-        addRow(form, 3, "Description", new JScrollPane(descriptionArea));
+    private GridPane buildForm() {
+        GridPane form = FxUi.form();
+        FxUi.addRow(form, 0, "Number *", numberField);
+        FxUi.addRow(form, 1, "Title *", titleField);
+        form.add(errorLabel, 1, 2);
+        FxUi.addRow(form, 3, "Description", descriptionArea);
         return form;
-    }
-
-    private void addRow(JPanel form, int row, String label, JComponent field) {
-        GridBagConstraints c = new GridBagConstraints();
-        c.gridy = row;
-        c.insets = new Insets(3, 3, 3, 3);
-        c.anchor = GridBagConstraints.NORTHWEST;
-        form.add(new JLabel(label), c);
-        c.gridx = 1;
-        c.weightx = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        form.add(field, c);
     }
 }

@@ -13,6 +13,10 @@ import hadithdb.dto.DeletionImpactDTO;
 import hadithdb.dto.HadithDTO;
 import hadithdb.dto.TranslationDTO;
 import hadithdb.dto.GlossaryEntryDTO;
+import hadithdb.dto.NarratorDTO;
+import hadithdb.dto.HadithNarratorDTO;
+import hadithdb.dto.HadithTopicDTO;
+import hadithdb.dto.HadithGradeDTO;
 
 public class DALFacade implements IDALFacade 
 {
@@ -27,6 +31,11 @@ public class DALFacade implements IDALFacade
     private final ITopicDAO topics;
     private final IGradeDefinitionDAO grades;
     private final IClassificationImpactDAO impact;
+    private final INarratorDAO narratorDAO;
+
+    private final IHadithNarratorDAO hadithNarratorDAO;
+    private final IHadithTopicDAO hadithTopicDAO;
+    private final IHadithGradeDAO hadithGradeDAO;
 
     public DALFacade(
             ICollectionDAO collectionDAO, 
@@ -53,6 +62,48 @@ public class DALFacade implements IDALFacade
             IGradeDefinitionDAO grades,
             IClassificationImpactDAO impact) 
     {
+        this(collectionDAO, bookDAO, chapterDAO, hadithDAO, translationDAO, glossaryDAO, impactDAO,
+             topics, grades, impact, null);
+    }
+
+    public DALFacade(
+            ICollectionDAO collectionDAO, 
+            IBookDAO bookDAO, 
+            IChapterDAO chapterDAO,
+            IHadithDAO hadithDAO, 
+            ITranslationDAO translationDAO, 
+            IGlossaryDAO glossaryDAO,
+            IDeletionImpactDAO impactDAO,
+            ITopicDAO topics,
+            IGradeDefinitionDAO grades,
+            IClassificationImpactDAO impact,
+            INarratorDAO narratorDAO) 
+    {
+        this(collectionDAO, bookDAO, chapterDAO, hadithDAO, translationDAO,
+             glossaryDAO, impactDAO, topics, grades, impact, narratorDAO,
+             null, null, null);
+    }
+
+    public DALFacade(
+            ICollectionDAO collectionDAO,
+            IBookDAO bookDAO,
+            IChapterDAO chapterDAO,
+            IHadithDAO hadithDAO,
+            ITranslationDAO translationDAO,
+            IGlossaryDAO glossaryDAO,
+            IDeletionImpactDAO impactDAO,
+            ITopicDAO topics,
+            IGradeDefinitionDAO grades,
+            IClassificationImpactDAO impact,
+            INarratorDAO narratorDAO,
+            IHadithNarratorDAO hadithNarratorDAO,
+            IHadithTopicDAO hadithTopicDAO,
+            IHadithGradeDAO hadithGradeDAO)
+    {
+        this.hadithNarratorDAO = hadithNarratorDAO;
+        this.hadithTopicDAO = hadithTopicDAO;
+        this.hadithGradeDAO = hadithGradeDAO;
+        this.narratorDAO = narratorDAO;
         this.topics = topics;
         this.grades = grades;
         this.impact = impact;
@@ -77,7 +128,11 @@ public class DALFacade implements IDALFacade
             factory.createDeletionImpactDAO(),
             factory.createTopicDAO(),
             factory.createGradeDefinitionDAO(),
-            factory.createClassificationImpactDAO()
+            factory.createClassificationImpactDAO(),
+            factory.createNarratorDAO(),
+            factory.createHadithNarratorDAO(),
+            factory.createHadithTopicDAO(),
+            factory.createHadithGradeDAO()
         );
     }
 
@@ -437,5 +492,144 @@ public class DALFacade implements IDALFacade
     public boolean gradeDefinitionExists(int id)
     {
         return grades.gradeDefinitionExists(id);
+    }
+
+    @Override
+    public int insertNarrator(NarratorDTO dto)
+    {
+        return narratorDAO.insertNarrator(dto);
+    }
+
+    @Override
+    public boolean updateNarrator(NarratorDTO dto)
+    {
+        return narratorDAO.updateNarrator(dto);
+    }
+
+    @Override
+    public boolean deleteNarrator(int id)
+    {
+        return narratorDAO.deleteNarrator(id);
+    }
+
+    @Override
+    public NarratorDTO getNarratorById(int id)
+    {
+        return narratorDAO.getNarratorById(id);
+    }
+
+    @Override
+    public List<NarratorDTO> getAllNarrators()
+    {
+        return narratorDAO.getAllNarrators();
+    }
+
+    @Override
+    public boolean narratorExists(int id)
+    {
+        return narratorDAO.narratorExists(id);
+    }
+
+    @Override
+    public int countHadithAssociations(int narratorId)
+    {
+        return narratorDAO.countHadithAssociations(narratorId);
+    }
+    // UC-07: Hadith narrator associations
+    public int insertHadithNarrator(HadithNarratorDTO association)
+    {
+        return hadithNarratorDAO.insertHadithNarrator(association);
+    }
+
+    public boolean updateHadithNarrator(HadithNarratorDTO association)
+    {
+        return hadithNarratorDAO.updateHadithNarrator(association);
+    }
+
+    public boolean deleteHadithNarrator(int id)
+    {
+        return hadithNarratorDAO.deleteHadithNarrator(id);
+    }
+
+    public HadithNarratorDTO getHadithNarratorById(int id)
+    {
+        return hadithNarratorDAO.getHadithNarratorById(id);
+    }
+
+    public List<HadithNarratorDTO> getHadithNarratorsByHadithId(int hadithId)
+    {
+        return hadithNarratorDAO.getHadithNarratorsByHadithId(hadithId);
+    }
+
+    public boolean hadithNarratorExists(int hadithId, int narratorId, int excludeId)
+    {
+        return hadithNarratorDAO.hadithNarratorExists(hadithId, narratorId, excludeId);
+    }
+
+    public boolean transmissionOrderExists(int hadithId, int transmissionOrder, int excludeId)
+    {
+        return hadithNarratorDAO.transmissionOrderExists(hadithId, transmissionOrder, excludeId);
+    }
+
+    // UC-07: Hadith topic associations
+    public int insertHadithTopic(HadithTopicDTO association)
+    {
+        return hadithTopicDAO.insertHadithTopic(association);
+    }
+
+    public boolean updateHadithTopic(HadithTopicDTO association)
+    {
+        return hadithTopicDAO.updateHadithTopic(association);
+    }
+
+    public boolean deleteHadithTopic(int id)
+    {
+        return hadithTopicDAO.deleteHadithTopic(id);
+    }
+
+    public HadithTopicDTO getHadithTopicById(int id)
+    {
+        return hadithTopicDAO.getHadithTopicById(id);
+    }
+
+    public List<HadithTopicDTO> getHadithTopicsByHadithId(int hadithId)
+    {
+        return hadithTopicDAO.getHadithTopicsByHadithId(hadithId);
+    }
+
+    public boolean hadithTopicExists(int hadithId, int topicId, int excludeId)
+    {
+        return hadithTopicDAO.hadithTopicExists(hadithId, topicId, excludeId);
+    }
+
+    // UC-07: Hadith grade associations
+    public int insertHadithGrade(HadithGradeDTO association)
+    {
+        return hadithGradeDAO.insertHadithGrade(association);
+    }
+
+    public boolean updateHadithGrade(HadithGradeDTO association)
+    {
+        return hadithGradeDAO.updateHadithGrade(association);
+    }
+
+    public boolean deleteHadithGrade(int id)
+    {
+        return hadithGradeDAO.deleteHadithGrade(id);
+    }
+
+    public HadithGradeDTO getHadithGradeById(int id)
+    {
+        return hadithGradeDAO.getHadithGradeById(id);
+    }
+
+    public List<HadithGradeDTO> getHadithGradesByHadithId(int hadithId)
+    {
+        return hadithGradeDAO.getHadithGradesByHadithId(hadithId);
+    }
+
+    public boolean hadithGradeExists(int hadithId, int gradeId, String gradingAuthority, int excludeId)
+    {
+        return hadithGradeDAO.hadithGradeExists(hadithId, gradeId, gradingAuthority, excludeId);
     }
 }

@@ -22,6 +22,7 @@ import hadithdb.dal.ICollectionDAO;
 import hadithdb.dal.IDeletionImpactDAO;
 import hadithdb.dto.CollectionDTO;
 import hadithdb.dto.DeletionImpactDTO;
+import hadithdb.exception.DataAccessException;
 
 class CollectionBOTest {
 
@@ -233,6 +234,40 @@ class CollectionBOTest {
         assertFalse(collections.rows.containsKey(id));
     }
 
+    @Test
+    void saveCollection_daoFails_exceptionPassesUpAndNothingIsStored() {
+        collections.failing = true;
+
+        assertThrows(DataAccessException.class, () -> bo.saveCollection(newCollection("Sahih Muslim")));
+        assertTrue(collections.rows.isEmpty());
+    }
+
+    @Test
+    void saveCollection_daoFailsOnEdit_storedCollectionIsUnchanged() {
+        int id = bo.saveCollection(newCollection("Original name"));
+        collections.failing = true;
+
+        assertThrows(DataAccessException.class,
+                () -> bo.saveCollection(new CollectionDTO(id, "Changed name", "", "", "", "")));
+        assertEquals("Original name", collections.rows.get(id).getName());
+    }
+
+    @Test
+    void deleteCollection_daoFails_exceptionPassesUpAndTheCollectionStays() {
+        int id = bo.saveCollection(newCollection("Keep me"));
+        collections.failing = true;
+
+        assertThrows(DataAccessException.class, () -> bo.deleteCollection(id, impact -> true));
+        assertTrue(collections.rows.containsKey(id));
+    }
+
+    @Test
+    void listCollections_daoFails_exceptionPassesUp() {
+        collections.failing = true;
+
+        assertThrows(DataAccessException.class, () -> bo.listCollections());
+    }
+
     private static CollectionDTO newCollection(String name) {
         return new CollectionDTO(0, name, "", "", "", "");
     }
@@ -242,9 +277,17 @@ class CollectionBOTest {
         final Map<Integer, CollectionDTO> rows = new LinkedHashMap<>();
         int nextId = 1;
         int deleteCalls = 0;
+        boolean failing = false;
+
+        private void failIfAsked() {
+            if (failing) {
+                throw new DataAccessException("Could not reach the database.", null);
+            }
+        }
 
         @Override
         public int insertCollection(CollectionDTO dto) {
+            failIfAsked();
             int id = nextId++;
             rows.put(id, copyWithId(id, dto));
             return id;
@@ -252,6 +295,7 @@ class CollectionBOTest {
 
         @Override
         public boolean updateCollection(CollectionDTO dto) {
+            failIfAsked();
             if (!rows.containsKey(dto.getId())) {
                 return false;
             }
@@ -266,11 +310,13 @@ class CollectionBOTest {
 
         @Override
         public List<CollectionDTO> getAllCollections() {
+            failIfAsked();
             return new ArrayList<>(rows.values());
         }
 
         @Override
         public boolean deleteCollection(int id) {
+            failIfAsked();
             deleteCalls++;
             return rows.remove(id) != null;
         }
