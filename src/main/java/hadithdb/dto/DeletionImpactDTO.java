@@ -14,6 +14,10 @@ public class DeletionImpactDTO {
     public int getHadithAssociations() {
         return hadithAssociations;
     }
+    
+    public void setHadithAssociations(int hadithAssociations) {
+        this.hadithAssociations = hadithAssociations;
+    }
 
     private int books;
     private int chapters;
