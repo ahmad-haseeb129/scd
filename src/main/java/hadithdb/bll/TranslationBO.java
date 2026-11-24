@@ -5,6 +5,7 @@ import java.util.List;
 import hadithdb.dal.IDALFacade;
 import hadithdb.dto.DeletionImpactDTO;
 import hadithdb.dto.TranslationDTO;
+import hadithdb.exception.RecordNotFoundException;
 
 public class TranslationBO {
 
@@ -22,8 +23,7 @@ public class TranslationBO {
             return dal.insertTranslation(translation);
         }
         if (!dal.updateTranslation(translation)) {
-            throw new ValidationException("Translation",
-                    "This translation no longer exists. Please reload the list.");
+            throw new RecordNotFoundException("Translation", translation.getId());
         }
         return translation.getId();
     }
@@ -39,7 +39,7 @@ public class TranslationBO {
     public boolean deleteTranslation(int id, IConfirmer confirmer) {
         TranslationDTO translation = dal.getTranslationById(id);
         if (translation == null) {
-            return false;
+            throw new RecordNotFoundException("Translation", id);
         }
         
         if (dal.countTranslation(translation.getHadithId()) <= 1) {
@@ -48,7 +48,10 @@ public class TranslationBO {
                     + "or delete the whole Hadith.");
         }
         if (confirmer.confirm(new DeletionImpactDTO())) {
-            return dal.deleteTranslation(id);
+            if (!dal.deleteTranslation(id)) {
+                throw new RecordNotFoundException("Translation", id);
+            }
+            return true;
         }
         return false;
     }

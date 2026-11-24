@@ -1,20 +1,21 @@
 package hadithdb.pl;
 
+import hadithdb.bll.TranslationBO;
+import hadithdb.bll.ValidationException;
+import hadithdb.dto.TranslationDTO;
+import hadithdb.exception.DataAccessException;
+import hadithdb.exception.RecordNotFoundException;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
-
-import hadithdb.bll.TranslationBO;
-import hadithdb.bll.ValidationException;
-import hadithdb.dto.TranslationDTO;
 
 /** translation operations for one existing Hadith */
 public class TranslationManagementView extends BorderPane {
@@ -133,8 +134,11 @@ public class TranslationManagementView extends BorderPane {
             } else if ("Translator".equals(e.getField())) {
                 translatorField.requestFocus();
             }
-        } catch (IllegalStateException e) {
-            errorLabel.setText(e.getMessage());
+        } catch (RecordNotFoundException e) {
+            ErrorHandler.showNotFound(this, e);
+            reload();
+        } catch (DataAccessException e) {
+            ErrorHandler.showDatabase(this, e);
         }
     }
 
@@ -146,8 +150,13 @@ public class TranslationManagementView extends BorderPane {
             if (translationBO.deleteTranslation(translationId, new FxConfirmer(this))) {
                 reload();
             }
-        } catch (ValidationException | IllegalStateException e) {
+        } catch (ValidationException e) {
             errorLabel.setText(e.getMessage());
+        } catch (RecordNotFoundException e) {
+            ErrorHandler.showNotFound(this, e);
+            reload();
+        } catch (DataAccessException e) {
+            ErrorHandler.showDatabase(this, e);
         }
     }
 

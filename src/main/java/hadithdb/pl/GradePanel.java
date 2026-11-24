@@ -3,6 +3,14 @@ package hadithdb.pl;
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
+import hadithdb.bll.DefinitionChanges;
+import hadithdb.bll.GradeDefinitionBO;
+import hadithdb.bll.IConfirmer;
+import hadithdb.bll.ValidationException;
+import hadithdb.dto.GradeDefinitionDTO;
+import hadithdb.exception.DataAccessException;
+import hadithdb.exception.LinksChangedException;
+import hadithdb.exception.RecordNotFoundException;
 import javafx.geometry.Insets;
 import javafx.geometry.NodeOrientation;
 import javafx.geometry.VPos;
@@ -17,15 +25,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
-
-import hadithdb.bll.DefinitionChanges;
-import hadithdb.bll.IConfirmer;
-import hadithdb.bll.GradeDefinitionBO;
-import hadithdb.bll.ValidationException;
-import hadithdb.dto.GradeDefinitionDTO;
-import hadithdb.exception.DataAccessException;
-import hadithdb.exception.LinksChangedException;
-import hadithdb.exception.RecordNotFoundException;
 
 public class GradePanel extends BorderPane
 {

@@ -2,6 +2,7 @@ package hadithdb.bll;
 
 import hadithdb.dal.IDALFacade;
 import hadithdb.dto.HadithDTO;
+import hadithdb.exception.RecordNotFoundException;
 
 public class HadithValidator {
 
@@ -18,17 +19,27 @@ public class HadithValidator {
 
         checkNotBlank("HadithNumber", "Hadith number", dto.getHadithNumber());
         checkMaxLength("HadithNumber", "Hadith number", dto.getHadithNumber(), hadithLength);
-        checkNotBlank("ArabicText", "Arabic text", dto.getArabicText());
+        requiredText("ArabicText", "Arabic text", dto.getArabicText());
+        TextRules.optionalText("Isnad", dto.getIsnad());
+        TextRules.optionalText("Matn", dto.getMatn());
+        TextRules.optionalText("Notes", dto.getNotes());
         checkNotBlank("SourceReference", "Source reference", dto.getSourceReference());
         checkMaxLength("SourceReference", "Source reference", dto.getSourceReference(), sourceReferenceLength);
 
         if (dto.getId() != 0 && !dal.hadithExists(dto.getId())) {
-            throw new ValidationException("Hadith", "This hadith no longer exists.");
+            throw new RecordNotFoundException("Hadith", dto.getId());
         }
         if (dal.hadithNumberExists(dto.getChapterId(), dto.getHadithNumber(), dto.getId())) {
             throw new ValidationException("HadithNumber",
                     "Hadith number " + dto.getHadithNumber() + " already exists in this chapter.");
         }
+    }
+
+    private void requiredText(String field, String label, String value) {
+        if (value == null || value.matches("[\\s\\p{Z}]*")) {
+            throw new ValidationException(field, label + " must not be blank. Please enter a value.");
+        }
+        TextRules.optionalText(field, value);
     }
 
     private void checkNotBlank(String field, String label, String value) {

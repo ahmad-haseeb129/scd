@@ -11,6 +11,14 @@ class TextRules {
             throw new ValidationException(field, field + " can have up to 255 characters. متن مختصر کریں۔");
         }
     }
+    
+    /** Required long text (a TEXT column): not blank, and within the 65,535-byte column limit. */
+    static void requiredText(String field, String value) {
+        if (value == null || value.matches("[\\s\\p{Z}]*")) {
+            throw new ValidationException(field, field + " is required. براہ کرم یہ خانہ پُر کریں۔");
+        }
+        optionalText(field, value);
+    }
 
     static void optionalText(String field, String value) {
         if (value != null && value.getBytes(StandardCharsets.UTF_8).length > 65535) {

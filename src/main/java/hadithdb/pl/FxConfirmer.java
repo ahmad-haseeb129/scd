@@ -1,11 +1,10 @@
 package hadithdb.pl;
 
+import hadithdb.bll.IConfirmer;
+import hadithdb.dto.DeletionImpactDTO;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
-
-import hadithdb.bll.IConfirmer;
-import hadithdb.dto.DeletionImpactDTO;
 
 public class FxConfirmer implements IConfirmer {
 

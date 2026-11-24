@@ -1,8 +1,5 @@
 package hadithdb.dal;
 
-import hadithdb.dto.HadithGradeDTO;
-import hadithdb.exception.DataAccessException;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,6 +7,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+
+import hadithdb.dto.HadithGradeDTO;
+import hadithdb.exception.DataAccessException;
 
 public class HadithGradeDAO implements IHadithGradeDAO
 {

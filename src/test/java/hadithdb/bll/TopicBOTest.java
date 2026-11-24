@@ -1,7 +1,5 @@
 package hadithdb.bll;
 
-import hadithdb.exception.DataAccessException;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -17,6 +15,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import hadithdb.dal.DALFacade;
 import hadithdb.dto.TopicDTO;
+import hadithdb.exception.DataAccessException;
 import hadithdb.exception.RecordNotFoundException;
 import hadithdb.stubs.StubClassificationImpactDAO;
 import hadithdb.stubs.StubConfirmer;

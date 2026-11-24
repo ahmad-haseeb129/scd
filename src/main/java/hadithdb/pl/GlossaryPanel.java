@@ -17,6 +17,8 @@ import hadithdb.bll.GlossaryBO;
 import hadithdb.bll.IConfirmer;
 import hadithdb.bll.ValidationException;
 import hadithdb.dto.GlossaryEntryDTO;
+import hadithdb.exception.DataAccessException;
+import hadithdb.exception.RecordNotFoundException;
 
 public class GlossaryPanel extends BorderPane
 {
@@ -97,9 +99,16 @@ public class GlossaryPanel extends BorderPane
             showError(e);
             return;
         }
-        catch (IllegalStateException e)
+        catch (RecordNotFoundException e)
         {
-            ErrorHandler.showDatabaseMessage(this, e.getMessage());
+            // the entry, book or chapter was deleted meanwhile: say so and show what is left
+            ErrorHandler.showNotFound(this, e);
+            reload();
+            return;
+        }
+        catch (DataAccessException e)
+        {
+            ErrorHandler.showDatabase(this, e);
             return;
         }
         loadEntries();
@@ -117,9 +126,14 @@ public class GlossaryPanel extends BorderPane
                 loadEntries();
             }
         }
-        catch (IllegalStateException e)
+        catch (RecordNotFoundException e)
         {
-            ErrorHandler.showDatabaseMessage(this, e.getMessage());
+            ErrorHandler.showNotFound(this, e);
+            reload();
+        }
+        catch (DataAccessException e)
+        {
+            ErrorHandler.showDatabase(this, e);
         }
     }
 
@@ -137,6 +151,19 @@ public class GlossaryPanel extends BorderPane
         explanationArea.setText(dto.getUrduExplanation());
         errorLabel.setText(" ");
         bar.editMode(dto.getArabicTerm());
+    }
+
+    /** Refreshes the list after a not-found error. A database failure here is reported, not thrown. */
+    private void reload()
+    {
+        try
+        {
+            loadEntries();
+        }
+        catch (DataAccessException e)
+        {
+            ErrorHandler.showDatabase(this, e);
+        }
     }
 
     private void loadEntries()

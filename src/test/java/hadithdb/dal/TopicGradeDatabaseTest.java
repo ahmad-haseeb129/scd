@@ -1,7 +1,5 @@
 package hadithdb.dal;
 
-import hadithdb.exception.LinksChangedException;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -25,6 +23,7 @@ import hadithdb.bll.TopicBO;
 import hadithdb.dto.DeletionImpactDTO;
 import hadithdb.dto.GradeDefinitionDTO;
 import hadithdb.dto.TopicDTO;
+import hadithdb.exception.LinksChangedException;
 import hadithdb.stubs.StubConfirmer;
 
 class TopicGradeDatabaseTest

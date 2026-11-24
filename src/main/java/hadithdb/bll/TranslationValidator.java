@@ -31,9 +31,10 @@ public class TranslationValidator {
         if (dto.getLanguage().length() > languageLength) {
             throw new ValidationException("Language", "Language must be at most " + languageLength + " characters.");
         }
-        if (dto.getTranslatedText() == null || dto.getTranslatedText().trim().isEmpty()) {
+        if (dto.getTranslatedText() == null || dto.getTranslatedText().matches("[\\s\\p{Z}]*")) {
             throw new ValidationException("TranslatedText", "Translated text must not be blank. Please enter a value.");
         }
+        TextRules.optionalText("TranslatedText", dto.getTranslatedText());
         if (dto.getTranslator() != null && dto.getTranslator().length() > translatorlength) {
             throw new ValidationException("Translator", "Translator must be at most " + translatorlength + " characters.");
         }

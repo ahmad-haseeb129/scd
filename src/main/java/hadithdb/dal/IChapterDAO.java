@@ -1,6 +1,7 @@
 package hadithdb.dal;
 
 import java.util.List;
+
 import hadithdb.dto.ChapterDTO;
 
 public interface IChapterDAO 

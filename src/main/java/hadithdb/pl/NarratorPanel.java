@@ -2,6 +2,11 @@ package hadithdb.pl;
 
 import java.util.List;
 
+import hadithdb.bll.IConfirmer;
+import hadithdb.bll.NarratorBO;
+import hadithdb.bll.ValidationException;
+import hadithdb.dto.NarratorDTO;
+import hadithdb.exception.DataAccessException;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -12,12 +17,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
-
-import hadithdb.bll.IConfirmer;
-import hadithdb.bll.NarratorBO;
-import hadithdb.bll.ValidationException;
-import hadithdb.dto.NarratorDTO;
-import hadithdb.exception.DataAccessException;
 
 public class NarratorPanel extends BorderPane {
 

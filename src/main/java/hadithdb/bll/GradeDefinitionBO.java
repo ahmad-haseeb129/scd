@@ -1,12 +1,11 @@
 package hadithdb.bll;
 
-import hadithdb.exception.LinksChangedException;
-
 import java.util.List;
 
 import hadithdb.dal.IDALFacade;
 import hadithdb.dto.DeletionImpactDTO;
 import hadithdb.dto.GradeDefinitionDTO;
+import hadithdb.exception.LinksChangedException;
 import hadithdb.exception.RecordNotFoundException;
 
 public class GradeDefinitionBO

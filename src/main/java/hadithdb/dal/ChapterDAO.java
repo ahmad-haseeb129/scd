@@ -1,7 +1,5 @@
 package hadithdb.dal;
 
-import hadithdb.exception.DataAccessException;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import hadithdb.dto.ChapterDTO;
+import hadithdb.exception.DataAccessException;
 
 public class ChapterDAO implements IChapterDAO 
 {

@@ -1,11 +1,19 @@
 package hadithdb.bll;
 
 /** TranslationBO testing with DAtabase  */
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import hadithdb.dto.TranslationDTO;
+import hadithdb.exception.DataAccessException;
+import hadithdb.exception.RecordNotFoundException;
 import hadithdb.stubs.StubTranslationDALFacade;
 
 class TranslationBOTest {
@@ -134,9 +142,9 @@ class TranslationBOTest {
     @Test
     void update_missingTranslation_isRejected() {
         TranslationDTO missing = translation(99, 10, "English", "Text");
-        ValidationException exception = assertThrows(ValidationException.class,
+        RecordNotFoundException exception = assertThrows(RecordNotFoundException.class,
                 () -> bo.saveTranslation(missing));
-        assertEquals("Translation", exception.getField());
+        assertEquals(99, exception.getId());
     }
 
     @Test
@@ -177,8 +185,34 @@ class TranslationBOTest {
 
     @Test
     void delete_missingTranslation_returnsFalseWithoutConfirmation() {
-        assertFalse(bo.deleteTranslation(999, impact -> true));
+        assertThrows(RecordNotFoundException.class, () -> bo.deleteTranslation(999, impact -> true));
     }
 
+
+    @Test
+    void translationTextUtf8ByteBoundary() {
+        bo.saveTranslation(translation(0, 10, "English", "a".repeat(65535)));
+        assertEquals("TranslatedText", assertThrows(ValidationException.class,
+                () -> bo.saveTranslation(translation(0, 10, "Urdu", "a".repeat(65536)))).getField());
+    }
+
+    @Test
+    void unicodeWhitespaceTranslationIsBlank() {
+        assertEquals("TranslatedText", assertThrows(ValidationException.class,
+                () -> bo.saveTranslation(translation(0, 10, "English", "\u2003\u3000"))).getField());
+    }
+
+    @Test
+    void translationInsertFailurePropagatesWithoutSaving() {
+        StubTranslationDALFacade failure = new StubTranslationDALFacade() {
+            @Override
+            public int insertTranslation(TranslationDTO dto) {
+                throw new DataAccessException("Could not save the translation.", new java.sql.SQLException());
+            }
+        };
+        assertThrows(DataAccessException.class,
+                () -> new TranslationBO(failure).saveTranslation(translation(0, 10, "Urdu", "Text")));
+        assertTrue(failure.rows.isEmpty());
+    }
 
 }

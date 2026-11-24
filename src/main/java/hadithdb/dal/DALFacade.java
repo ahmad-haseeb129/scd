@@ -1,22 +1,20 @@
 package hadithdb.dal;
 
-import hadithdb.dto.GradeDefinitionDTO;
-
-import hadithdb.dto.TopicDTO;
-
 import java.util.List;
 
 import hadithdb.dto.BookDTO;
 import hadithdb.dto.ChapterDTO;
 import hadithdb.dto.CollectionDTO;
 import hadithdb.dto.DeletionImpactDTO;
-import hadithdb.dto.HadithDTO;
-import hadithdb.dto.TranslationDTO;
 import hadithdb.dto.GlossaryEntryDTO;
-import hadithdb.dto.NarratorDTO;
+import hadithdb.dto.GradeDefinitionDTO;
+import hadithdb.dto.HadithDTO;
+import hadithdb.dto.HadithGradeDTO;
 import hadithdb.dto.HadithNarratorDTO;
 import hadithdb.dto.HadithTopicDTO;
-import hadithdb.dto.HadithGradeDTO;
+import hadithdb.dto.NarratorDTO;
+import hadithdb.dto.TopicDTO;
+import hadithdb.dto.TranslationDTO;
 
 public class DALFacade implements IDALFacade 
 {

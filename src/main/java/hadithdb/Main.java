@@ -3,11 +3,6 @@ package hadithdb;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.scene.control.Alert;
-import javafx.stage.Stage;
-
 import hadithdb.bll.BLLFacade;
 import hadithdb.dal.AbstractDAOFactory;
 import hadithdb.dal.DALFacade;
@@ -15,6 +10,10 @@ import hadithdb.dal.DBConnection;
 import hadithdb.exception.ConfigurationException;
 import hadithdb.exception.DataAccessException;
 import hadithdb.pl.MainWindow;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.stage.Stage;
 
 public class Main extends Application {
     private static final Logger logger = Logger.getLogger(Main.class.getName());

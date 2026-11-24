@@ -2,6 +2,11 @@ package hadithdb.pl;
 
 import java.util.List;
 
+import hadithdb.bll.CollectionBO;
+import hadithdb.bll.IConfirmer;
+import hadithdb.bll.ValidationException;
+import hadithdb.dto.CollectionDTO;
+import hadithdb.exception.DataAccessException;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -12,12 +17,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-
-import hadithdb.bll.CollectionBO;
-import hadithdb.bll.IConfirmer;
-import hadithdb.bll.ValidationException;
-import hadithdb.dto.CollectionDTO;
-import hadithdb.exception.DataAccessException;
 
 public class CollectionPanel extends BorderPane {
 

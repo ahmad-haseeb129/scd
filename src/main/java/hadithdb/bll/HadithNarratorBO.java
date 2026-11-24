@@ -1,12 +1,12 @@
 package hadithdb.bll;
 
+import java.util.List;
+
 import hadithdb.dal.IDALFacade;
 import hadithdb.dal.IHadithNarratorDAO;
 import hadithdb.dto.DeletionImpactDTO;
 import hadithdb.dto.HadithNarratorDTO;
 import hadithdb.exception.RecordNotFoundException;
-
-import java.util.List;
 
 public class HadithNarratorBO
 {

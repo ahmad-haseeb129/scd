@@ -1,6 +1,5 @@
 package hadithdb.pl;
 
-import java.util.List;
 
 import hadithdb.bll.BLLFacade;
 import hadithdb.bll.HadithBO;
@@ -8,6 +7,8 @@ import hadithdb.bll.TranslationBO;
 import hadithdb.bll.ValidationException;
 import hadithdb.dto.HadithDTO;
 import hadithdb.dto.TranslationDTO;
+import hadithdb.exception.DataAccessException;
+import hadithdb.exception.RecordNotFoundException;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -24,7 +25,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
 
 /** Hadith list -> Hadith editor -> translations. Business rules remain in BLL. */
 public class HadithPanel extends BorderPane {
@@ -272,8 +272,12 @@ public class HadithPanel extends BorderPane {
             errorLabel.setText(e.getMessage());
             focusField(e.getField());
             return;
-        } catch (IllegalStateException e) {
-            errorLabel.setText(e.getMessage());
+        } catch (RecordNotFoundException e) {
+            ErrorHandler.showNotFound(this, e);
+            loadHadith();
+            return;
+        } catch (DataAccessException e) {
+            ErrorHandler.showDatabase(this, e);
             return;
         }
         hadithRows.setAll(hadithBO.listHadith(chapterId));
@@ -285,8 +289,11 @@ public class HadithPanel extends BorderPane {
         if (editingHadithId <= 0) return;
         try {
             if (hadithBO.deleteHadith(editingHadithId, new FxConfirmer(this))) loadHadith();
-        } catch (IllegalStateException e) {
-            errorLabel.setText(e.getMessage());
+        } catch (RecordNotFoundException e) {
+            ErrorHandler.showNotFound(this, e);
+            loadHadith();
+        } catch (DataAccessException e) {
+            ErrorHandler.showDatabase(this, e);
         }
     }
 
@@ -321,7 +328,7 @@ public class HadithPanel extends BorderPane {
 
     private static void styleTextArea(TextArea area, boolean rtl, String color) {
         area.setWrapText(true);
-        area.setFont(Font.font("Arial", rtl ? 19 : 15));
+        area.setFont(UiFonts.arabicCapable(rtl ? 19 : 15));
         area.setStyle("-fx-control-inner-background: " + color + ";");
         if (rtl) FxUi.rightToLeft(area);
     }

@@ -10,7 +10,8 @@ import java.util.List;
 
 import hadithdb.dto.HadithDTO;
 import hadithdb.dto.TranslationDTO;
-
+import hadithdb.exception.ConstraintViolationException;
+import hadithdb.exception.DataAccessException;
 
 public class HadithDAO implements IHadithDAO{
 	private static final String COLUMNS = "id, chapter_id, hadith_number, "
@@ -59,13 +60,17 @@ public class HadithDAO implements IHadithDAO{
 			}
 			
 			catch(SQLException e) {
-				connection.rollback();
-				throw e;
+				try {
+                    connection.rollback();
+                } catch (SQLException rollbackFailure) {
+                    e.addSuppressed(rollbackFailure);
+                }
+                throw e;
 			}
 		}
 		
 		catch(SQLException e) {
-			throw new IllegalStateException("Could not save the Hadith : "+e.getMessage(),e);
+			throw translate(e, "Could not save the Hadith.");
 		}
 	}
 	
@@ -89,7 +94,7 @@ public class HadithDAO implements IHadithDAO{
 			
 		}
 		catch(SQLException e) {
-			throw new IllegalStateException("Could not save the Hadith : " + e.getMessage(),e);
+			throw translate(e, "Could not update the Hadith.");
 		}
 	}
 	
@@ -112,7 +117,7 @@ public class HadithDAO implements IHadithDAO{
 			}
 		}
 		catch(SQLException e) {
-			throw new IllegalStateException("Could not read the hadith : "+ e.getMessage(),e);
+			throw new DataAccessException("Could not read the Hadith.", e);
 		}
 	}
 	
@@ -134,7 +139,7 @@ public class HadithDAO implements IHadithDAO{
 		}
 		
 		catch(SQLException e) {
-			throw new IllegalStateException("Could not read the hadith list : " + e.getMessage(),e);
+			throw new DataAccessException("Could not list Hadith records.", e);
 		}
 	}
 	
@@ -148,7 +153,7 @@ public class HadithDAO implements IHadithDAO{
 			return statement.executeUpdate() > 0;
 		}
 		catch(SQLException e) {
-			throw new IllegalStateException("Could not delete the Hadith : " + e.getMessage(),e);
+			throw new DataAccessException("Could not delete the Hadith.", e);
 		}
 	}
 	
@@ -164,7 +169,7 @@ public class HadithDAO implements IHadithDAO{
 			}
 		}
 		catch(SQLException e) {
-			throw new IllegalStateException("Could not read the Hadith : " + e.getMessage(),e);
+			throw new DataAccessException("Could not check the Hadith.", e);
 		}
 	}
 	
@@ -182,8 +187,14 @@ public class HadithDAO implements IHadithDAO{
 			}
 		}
 		catch(SQLException e) {
-			throw new IllegalStateException("Could not check the Hadith : " + e.getMessage(),e);
+			throw new DataAccessException("Could not check the Hadith number.", e);
 		}
 	}
 	
+    private DataAccessException translate(SQLException error, String message) {
+        if (error.getSQLState() != null && error.getSQLState().startsWith("23")) {
+            return new ConstraintViolationException(error);
+        }
+        return new DataAccessException(message, error);
+    }
 }

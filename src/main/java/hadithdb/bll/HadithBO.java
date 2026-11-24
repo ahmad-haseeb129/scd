@@ -6,6 +6,7 @@ import hadithdb.dal.IDALFacade;
 import hadithdb.dto.DeletionImpactDTO;
 import hadithdb.dto.HadithDTO;
 import hadithdb.dto.TranslationDTO;
+import hadithdb.exception.RecordNotFoundException;
 
 public class HadithBO {
 
@@ -32,7 +33,7 @@ public class HadithBO {
     public void updateHadith(HadithDTO hadith) {
         hadithValidator.validate(hadith, dal);
         if (!dal.updateHadith(hadith)) {
-            throw new ValidationException("Hadith", "This hadith no longer exists. Please reload the list.");
+            throw new RecordNotFoundException("Hadith", hadith.getId());
         }
     }
 
@@ -45,9 +46,15 @@ public class HadithBO {
     }
 
     public boolean deleteHadith(int id, IConfirmer confirmer) {
+        if (!dal.hadithExists(id)) {
+            throw new RecordNotFoundException("Hadith", id);
+        }
         DeletionImpactDTO impact = dal.impactOfHadith(id);
         if (confirmer.confirm(impact)) {
-            return dal.deleteHadith(id);
+            if (!dal.deleteHadith(id)) {
+                throw new RecordNotFoundException("Hadith", id);
+            }
+            return true;
         }
         return false;
     }

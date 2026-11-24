@@ -3,6 +3,14 @@ package hadithdb.pl;
 import java.util.ArrayList;
 import java.util.List;
 
+import hadithdb.bll.BLLFacade;
+import hadithdb.bll.BookBO;
+import hadithdb.bll.ChapterBO;
+import hadithdb.bll.CollectionBO;
+import hadithdb.dto.BookDTO;
+import hadithdb.dto.ChapterDTO;
+import hadithdb.dto.CollectionDTO;
+import hadithdb.exception.DataAccessException;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -23,15 +31,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
-
-import hadithdb.bll.BLLFacade;
-import hadithdb.bll.BookBO;
-import hadithdb.bll.ChapterBO;
-import hadithdb.bll.CollectionBO;
-import hadithdb.dto.BookDTO;
-import hadithdb.dto.ChapterDTO;
-import hadithdb.dto.CollectionDTO;
-import hadithdb.exception.DataAccessException;
 
 public class MainWindow {
 

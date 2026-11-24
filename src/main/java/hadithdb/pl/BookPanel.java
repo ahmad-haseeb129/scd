@@ -2,6 +2,12 @@ package hadithdb.pl;
 
 import java.util.List;
 
+import hadithdb.bll.BookBO;
+import hadithdb.bll.IConfirmer;
+import hadithdb.bll.ValidationException;
+import hadithdb.dto.BookDTO;
+import hadithdb.exception.DataAccessException;
+import hadithdb.exception.RecordNotFoundException;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -12,13 +18,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-
-import hadithdb.bll.BookBO;
-import hadithdb.bll.IConfirmer;
-import hadithdb.bll.ValidationException;
-import hadithdb.dto.BookDTO;
-import hadithdb.exception.DataAccessException;
-import hadithdb.exception.RecordNotFoundException;
 
 public class BookPanel extends BorderPane {
 

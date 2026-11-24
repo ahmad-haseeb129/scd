@@ -8,11 +8,17 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import hadithdb.dto.GlossaryEntryDTO;
+import hadithdb.exception.ConstraintViolationException;
+import hadithdb.exception.DataAccessException;
 
 public class GlossaryDAO implements IGlossaryDAO 
 {
+
+    private static final Logger LOG = Logger.getLogger(GlossaryDAO.class.getName());
 
     private static final String COLUMNS = "id, book_id, chapter_id, arabic_term, urdu_meaning, urdu_explanation";
 
@@ -38,7 +44,7 @@ public class GlossaryDAO implements IGlossaryDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not save the glossary entry: " + e.getMessage(), e);
+            throw failure("Could not save the glossary entry.", e);
         }
     }
 
@@ -57,7 +63,7 @@ public class GlossaryDAO implements IGlossaryDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not save the glossary entry: " + e.getMessage(), e);
+            throw failure("Could not save the glossary entry.", e);
         }
     }
 
@@ -76,7 +82,7 @@ public class GlossaryDAO implements IGlossaryDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not read the glossary entry: " + e.getMessage(), e);
+            throw failure("Could not read the glossary entry.", e);
         }
     }
 
@@ -103,7 +109,7 @@ public class GlossaryDAO implements IGlossaryDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not delete the glossary entry: " + e.getMessage(), e);
+            throw failure("Could not delete the glossary entry.", e);
         }
     }
 
@@ -128,8 +134,24 @@ public class GlossaryDAO implements IGlossaryDAO
         } 
         catch (SQLException e) 
         {
-            throw new IllegalStateException("Could not read the glossary entries: " + e.getMessage(), e);
+            throw failure("Could not read the glossary entries.", e);
         }
+    }
+
+    /**
+     * Turns a SQL error into one of our exceptions. The real error is logged and kept as the cause;
+     * the message is short and plain, never SQL text. A duplicate or a missing parent (SQLState 23...)
+     * becomes a ConstraintViolationException.
+     */
+    private DataAccessException failure(String what, SQLException e)
+    {
+        LOG.log(Level.SEVERE, what, e);
+        String sqlState = e.getSQLState();
+        if (sqlState != null && sqlState.startsWith("23"))
+        {
+            return new ConstraintViolationException(e);
+        }
+        return new DataAccessException(what + " Please check that the database is running and try again.", e);
     }
 
     private void setParent(PreparedStatement statement, int index, int parentId) throws SQLException 

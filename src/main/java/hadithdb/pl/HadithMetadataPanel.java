@@ -12,10 +12,13 @@ import hadithdb.dto.HadithTopicDTO;
 import hadithdb.dto.NarratorDTO;
 import hadithdb.dto.TopicDTO;
 import hadithdb.exception.DataAccessException;
+import hadithdb.exception.DomainException;
 import hadithdb.exception.RecordNotFoundException;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
@@ -186,7 +189,7 @@ public class HadithMetadataPanel extends VBox {
             reloadNarrators();
             reloadTopics();
             reloadGrades();
-        } catch (RuntimeException e) {
+        } catch (ValidationException | RecordNotFoundException | DataAccessException e) {
             showError(e, narratorError);
         }
     }
@@ -228,7 +231,7 @@ public class HadithMetadataPanel extends VBox {
                     new HadithNarratorDTO(narratorAssociationId, hadithId, narrator.getId(), order));
             reloadNarrators();
             clearNarrator();
-        } catch (RuntimeException e) {
+        } catch (ValidationException | RecordNotFoundException | DataAccessException e) {
             showError(e, narratorError);
         }
     }
@@ -244,7 +247,7 @@ public class HadithMetadataPanel extends VBox {
                     new HadithTopicDTO(topicAssociationId, hadithId, topic.getId()));
             reloadTopics();
             clearTopic();
-        } catch (RuntimeException e) {
+        } catch (ValidationException | RecordNotFoundException | DataAccessException e) {
             showError(e, topicError);
         }
     }
@@ -261,52 +264,59 @@ public class HadithMetadataPanel extends VBox {
                             authorityField.getText(), citationArea.getText()));
             reloadGrades();
             clearGrade();
-        } catch (RuntimeException e) {
+        } catch (ValidationException | RecordNotFoundException | DataAccessException e) {
             showError(e, gradeError);
         }
     }
 
     private void deleteNarrator() {
-        if (narratorAssociationId == 0) {
+        HadithNarratorDTO selected = narratorTable.getSelectionModel().getSelectedItem();
+        if (selected == null || narratorAssociationId == 0) {
             narratorError.setText("Select an association to remove.");
             return;
         }
         try {
-            if (business.hadithNarrators().deleteHadithNarrator(narratorAssociationId, new FxConfirmer(this))) {
+            if (business.hadithNarrators().deleteHadithNarrator(
+                    selected.getId(), namedRemoval("narrator " + narratorName(selected.getNarratorId())))) {
                 reloadNarrators();
                 clearNarrator();
             }
-        } catch (RuntimeException e) {
+        } catch (ValidationException | RecordNotFoundException | DataAccessException e) {
             showError(e, narratorError);
         }
     }
 
     private void deleteTopic() {
-        if (topicAssociationId == 0) {
+        HadithTopicDTO selected = topicTable.getSelectionModel().getSelectedItem();
+        if (selected == null || topicAssociationId == 0) {
             topicError.setText("Select an association to remove.");
             return;
         }
         try {
-            if (business.hadithTopics().deleteHadithTopic(topicAssociationId, new FxConfirmer(this))) {
+            if (business.hadithTopics().deleteHadithTopic(
+                    selected.getId(), namedRemoval("topic " + topicName(selected.getTopicId())))) {
                 reloadTopics();
                 clearTopic();
             }
-        } catch (RuntimeException e) {
+        } catch (ValidationException | RecordNotFoundException | DataAccessException e) {
             showError(e, topicError);
         }
     }
 
     private void deleteGrade() {
-        if (gradeAssociationId == 0) {
+        HadithGradeDTO selected = gradeTable.getSelectionModel().getSelectedItem();
+        if (selected == null || gradeAssociationId == 0) {
             gradeError.setText("Select an attribution to remove.");
             return;
         }
         try {
-            if (business.hadithGrades().deleteHadithGrade(gradeAssociationId, new FxConfirmer(this))) {
+            if (business.hadithGrades().deleteHadithGrade(
+                    selected.getId(), namedRemoval("grade " + gradeName(selected.getGradeId())
+                            + " attributed to " + selected.getGradingAuthority()))) {
                 reloadGrades();
                 clearGrade();
             }
-        } catch (RuntimeException e) {
+        } catch (ValidationException | RecordNotFoundException | DataAccessException e) {
             showError(e, gradeError);
         }
     }
@@ -386,15 +396,25 @@ public class HadithMetadataPanel extends VBox {
         };
     }
 
-    private void showError(RuntimeException e, Label label) {
+    private hadithdb.bll.IConfirmer namedRemoval(String association) {
+        return impact -> {
+            Alert alert = new Alert(Alert.AlertType.WARNING,
+                    "Remove this " + association + " association? The Hadith itself will be preserved.",
+                    ButtonType.YES, ButtonType.NO);
+            alert.setTitle("Confirm association removal");
+            alert.setHeaderText(null);
+            ErrorHandler.setOwner(alert, this);
+            return alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES;
+        };
+    }
+
+    private void showError(DomainException e, Label label) {
         if (e instanceof ValidationException) {
             label.setText(e.getMessage());
         } else if (e instanceof RecordNotFoundException) {
             ErrorHandler.showNotFound(this, (RecordNotFoundException) e);
         } else if (e instanceof DataAccessException) {
             ErrorHandler.showDatabase(this, (DataAccessException) e);
-        } else {
-            ErrorHandler.showUnexpected(this, e);
         }
     }
 }

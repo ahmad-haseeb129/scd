@@ -3,13 +3,12 @@ package hadithdb.pl;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javafx.scene.Node;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-
 import hadithdb.bll.ValidationException;
 import hadithdb.exception.DataAccessException;
 import hadithdb.exception.RecordNotFoundException;
+import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
 
 public final class ErrorHandler {
 

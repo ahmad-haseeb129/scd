@@ -1,12 +1,11 @@
 package hadithdb.bll;
 
-import hadithdb.exception.RecordNotFoundException;
-
 import java.util.List;
 
 import hadithdb.dal.IDALFacade;
 import hadithdb.dto.ChapterDTO;
 import hadithdb.dto.DeletionImpactDTO;
+import hadithdb.exception.RecordNotFoundException;
 
 public class ChapterBO {
 

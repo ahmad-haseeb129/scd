@@ -1,13 +1,12 @@
 package hadithdb.dal;
 
-import hadithdb.exception.DataAccessException;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import hadithdb.dto.DeletionImpactDTO;
+import hadithdb.exception.DataAccessException;
 
 public class ClassificationImpactDAO implements IClassificationImpactDAO
 {

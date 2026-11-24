@@ -1,10 +1,10 @@
 package hadithdb.dal;
 
-import hadithdb.exception.ConfigurationException;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
+
+import hadithdb.exception.ConfigurationException;
 
 public abstract class AbstractDAOFactory implements IDAOFactory {
 

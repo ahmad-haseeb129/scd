@@ -9,7 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import hadithdb.dto.TranslationDTO;
-
+import hadithdb.exception.ConstraintViolationException;
+import hadithdb.exception.DataAccessException;
 
 public class TranslationDAO implements ITranslationDAO{
 	private static final String COLUMNS = "id, hadith_id, language, translated_text, translator";
@@ -32,7 +33,7 @@ public class TranslationDAO implements ITranslationDAO{
 			}
 		}
 		catch(SQLException e) {
-			throw new IllegalStateException("Could not save the Translation : "+e.getMessage(),e);
+			throw translate(e, "Could not save the translation.");
 		}
 	}
 	
@@ -51,7 +52,7 @@ public class TranslationDAO implements ITranslationDAO{
 		}
 		
 		catch(SQLException e) {
-			throw new IllegalStateException("Cold no update the translation : "+e.getMessage(),e);
+			throw translate(e, "Could not update the translation.");
 			
 		}
 	}
@@ -75,7 +76,7 @@ public class TranslationDAO implements ITranslationDAO{
 		}
 		
 		catch(SQLException e) {
-			throw new IllegalStateException("Could not read the translation : "+e.getMessage(),e);
+			throw new DataAccessException("Could not read the translation.", e);
 		}
 	}
 	
@@ -103,7 +104,7 @@ public class TranslationDAO implements ITranslationDAO{
 		}
 		
 		catch(SQLException e) {
-			throw new IllegalStateException("Could not read the translation : "+e.getMessage(),e);
+			throw new DataAccessException("Could not list translations.", e);
 		}
 	}
 	
@@ -119,7 +120,7 @@ public class TranslationDAO implements ITranslationDAO{
 		}
 		
 		catch(SQLException e) {
-			throw new IllegalStateException("Coould not delete the translation : "+e.getMessage(),e);
+			throw new DataAccessException("Could not delete the translation.", e);
 		}
 	}
 	
@@ -140,7 +141,7 @@ public class TranslationDAO implements ITranslationDAO{
 		}
 		
 		catch(SQLException e) {
-			throw new IllegalStateException("could not check the language: "+e.getMessage(),e);
+			throw new DataAccessException("Could not check the language.", e);
 		}
 	}
 	
@@ -161,10 +162,16 @@ public class TranslationDAO implements ITranslationDAO{
 		}
 		
 		catch(SQLException e) {
-			throw new IllegalStateException("could not count the translation : "+e.getMessage(),e);
+			throw new DataAccessException("Could not count translations.", e);
 		}
 	}
 	
 	
 	
+    private DataAccessException translate(SQLException error, String message) {
+        if (error.getSQLState() != null && error.getSQLState().startsWith("23")) {
+            return new ConstraintViolationException(error);
+        }
+        return new DataAccessException(message, error);
+    }
 }

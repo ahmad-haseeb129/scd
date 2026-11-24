@@ -5,11 +5,12 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import hadithdb.dal.DALFacade;
-import hadithdb.dto.HadithDTO;
-import hadithdb.dto.TranslationDTO;
 import hadithdb.dto.ChapterDTO;
 import hadithdb.dto.DeletionImpactDTO;
+import hadithdb.dto.HadithDTO;
+import hadithdb.dto.TranslationDTO;
 
 public class StubHadithRecordDALFacade extends DALFacade {
     public final Map<Integer, HadithDTO> hadiths = new LinkedHashMap<>();

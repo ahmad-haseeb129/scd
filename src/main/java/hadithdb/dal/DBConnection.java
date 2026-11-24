@@ -1,9 +1,5 @@
 package hadithdb.dal;
 
-import hadithdb.exception.ConfigurationException;
-
-import hadithdb.exception.DataAccessException;
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -15,6 +11,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
+
+import hadithdb.exception.ConfigurationException;
+import hadithdb.exception.DataAccessException;
 
 public class DBConnection {
 

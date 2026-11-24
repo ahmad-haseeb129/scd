@@ -2,6 +2,7 @@ package hadithdb.stubs;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import hadithdb.dal.DALFacade;
 import hadithdb.dto.BookDTO;
 import hadithdb.dto.CollectionDTO;

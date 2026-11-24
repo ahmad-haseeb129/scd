@@ -1,13 +1,22 @@
 package hadithdb.bll;
 
 /** Check hadithBO without a database. */
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import hadithdb.dto.HadithDTO;
 import hadithdb.dto.TranslationDTO;
+import hadithdb.exception.DataAccessException;
+import hadithdb.exception.RecordNotFoundException;
 import hadithdb.stubs.StubHadithRecordDALFacade;
 
 class HadithBOTest {
@@ -115,8 +124,8 @@ class HadithBOTest {
     void updateHadith_nonexistentHadith_isRejected() {
         HadithDTO missing = newHadith("1");
         missing.setId(999);
-        assertEquals("Hadith", assertThrows(ValidationException.class,
-                () -> bo.updateHadith(missing)).getField());
+        assertEquals(999, assertThrows(RecordNotFoundException.class,
+                () -> bo.updateHadith(missing)).getId());
     }
 
     @Test
@@ -156,5 +165,53 @@ class HadithBOTest {
         return new TranslationDTO(0, 0, "English", "English translation", "Translator");
     }
 
+
+    @Test
+    void missingHadithDeleteNeverAsksForConfirmation() {
+        final boolean[] requested = {false};
+        assertThrows(RecordNotFoundException.class, () -> bo.deleteHadith(999, impact -> {
+            requested[0] = true;
+            return true;
+        }));
+        assertFalse(requested[0]);
+    }
+
+    @Test
+    void arabicTextUtf8ByteBoundaryAndOptionalFields() {
+        HadithDTO allowed = newHadith("1");
+        allowed.setArabicText("a".repeat(65535));
+        bo.createHadith(allowed, firstTranslation());
+        HadithDTO tooLarge = newHadith("2");
+        tooLarge.setArabicText("a".repeat(65536));
+        assertEquals("ArabicText", assertThrows(ValidationException.class,
+                () -> bo.createHadith(tooLarge, firstTranslation())).getField());
+        tooLarge.setArabicText("a");
+        tooLarge.setNotes("س".repeat(32768));
+        assertEquals("Notes", assertThrows(ValidationException.class,
+                () -> bo.createHadith(tooLarge, firstTranslation())).getField());
+    }
+
+    @Test
+    void unusualUnicodeWhitespaceIsNotValidArabicText() {
+        HadithDTO dto = newHadith("1");
+        dto.setArabicText("\u2003\u3000\u00a0");
+        assertEquals("ArabicText", assertThrows(ValidationException.class,
+                () -> bo.createHadith(dto, firstTranslation())).getField());
+    }
+
+    @Test
+    void databaseFailureOnHadithInsertIsPropagatedWithoutPartialSave() {
+        StubHadithRecordDALFacade failure = new StubHadithRecordDALFacade() {
+            @Override
+            public int insertHadithWithTranslation(HadithDTO dto, TranslationDTO translation) {
+                throw new DataAccessException("Could not save the Hadith.", new java.sql.SQLException());
+            }
+        };
+        HadithBO service = new HadithBO(failure);
+        assertThrows(DataAccessException.class,
+                () -> service.createHadith(newHadith("1"), firstTranslation()));
+        assertTrue(failure.hadiths.isEmpty());
+        assertTrue(failure.translations.isEmpty());
+    }
 
 }
