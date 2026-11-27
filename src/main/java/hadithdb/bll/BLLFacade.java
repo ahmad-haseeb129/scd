@@ -1,5 +1,7 @@
 package hadithdb.bll;
 
+import java.time.Clock;
+
 import hadithdb.dal.IDALFacade;
 
 public class BLLFacade {
@@ -17,8 +19,13 @@ public class BLLFacade {
     private final HadithTopicBO hadithTopics;
     private final HadithGradeBO hadithGrades;
     private final ReaderBO reader;
+    private final DailyHadithBO dailyHadith;
 
     public BLLFacade(IDALFacade dal) {
+        this(dal, Clock.systemDefaultZone());
+    }
+
+    public BLLFacade(IDALFacade dal, Clock clock) {
         collections = new CollectionBO(dal);
         books = new BookBO(dal);
         chapters = new ChapterBO(dal);
@@ -32,6 +39,7 @@ public class BLLFacade {
         hadithTopics = new HadithTopicBO(dal, dal);
         hadithGrades = new HadithGradeBO(dal, dal);
         reader = new ReaderBO(dal);
+        dailyHadith = new DailyHadithBO(dal, clock);
     }
 
     public CollectionBO collections() {
@@ -84,6 +92,10 @@ public class BLLFacade {
 
     public ReaderBO reader() {
         return reader;
+    }
+
+    public DailyHadithBO dailyHadith() {
+        return dailyHadith;
     }
 
     public DefinitionChanges changes() {

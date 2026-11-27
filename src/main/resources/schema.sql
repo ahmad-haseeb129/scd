@@ -126,3 +126,9 @@ CREATE TABLE IF NOT EXISTS hadith_grade (
   FOREIGN KEY (hadith_id) REFERENCES hadith(id) ON DELETE CASCADE,
   FOREIGN KEY (grade_id) REFERENCES authenticity_grade(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS daily_hadith (
+  selection_date DATE PRIMARY KEY,
+  hadith_id INT NOT NULL,
+  FOREIGN KEY (hadith_id) REFERENCES hadith(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

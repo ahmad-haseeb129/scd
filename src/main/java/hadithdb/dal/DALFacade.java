@@ -1,10 +1,12 @@
 package hadithdb.dal;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import hadithdb.dto.BookDTO;
 import hadithdb.dto.ChapterDTO;
 import hadithdb.dto.CollectionDTO;
+import hadithdb.dto.DailyHadithDTO;
 import hadithdb.dto.DeletionImpactDTO;
 import hadithdb.dto.GlossaryEntryDTO;
 import hadithdb.dto.GradeDefinitionDTO;
@@ -34,6 +36,7 @@ public class DALFacade implements IDALFacade
     private final IHadithNarratorDAO hadithNarratorDAO;
     private final IHadithTopicDAO hadithTopicDAO;
     private final IHadithGradeDAO hadithGradeDAO;
+    private final IDailyHadithDAO dailyHadithDAO;
 
     public DALFacade(
             ICollectionDAO collectionDAO, 
@@ -98,6 +101,29 @@ public class DALFacade implements IDALFacade
             IHadithTopicDAO hadithTopicDAO,
             IHadithGradeDAO hadithGradeDAO)
     {
+        this(collectionDAO, bookDAO, chapterDAO, hadithDAO, translationDAO,
+             glossaryDAO, impactDAO, topics, grades, impact, narratorDAO,
+             hadithNarratorDAO, hadithTopicDAO, hadithGradeDAO, null);
+    }
+
+    public DALFacade(
+            ICollectionDAO collectionDAO,
+            IBookDAO bookDAO,
+            IChapterDAO chapterDAO,
+            IHadithDAO hadithDAO,
+            ITranslationDAO translationDAO,
+            IGlossaryDAO glossaryDAO,
+            IDeletionImpactDAO impactDAO,
+            ITopicDAO topics,
+            IGradeDefinitionDAO grades,
+            IClassificationImpactDAO impact,
+            INarratorDAO narratorDAO,
+            IHadithNarratorDAO hadithNarratorDAO,
+            IHadithTopicDAO hadithTopicDAO,
+            IHadithGradeDAO hadithGradeDAO,
+            IDailyHadithDAO dailyHadithDAO)
+    {
+        this.dailyHadithDAO = dailyHadithDAO;
         this.hadithNarratorDAO = hadithNarratorDAO;
         this.hadithTopicDAO = hadithTopicDAO;
         this.hadithGradeDAO = hadithGradeDAO;
@@ -130,7 +156,8 @@ public class DALFacade implements IDALFacade
             factory.createNarratorDAO(),
             factory.createHadithNarratorDAO(),
             factory.createHadithTopicDAO(),
-            factory.createHadithGradeDAO()
+            factory.createHadithGradeDAO(),
+            factory.createDailyHadithDAO()
         );
     }
 
@@ -629,5 +656,46 @@ public class DALFacade implements IDALFacade
     public boolean hadithGradeExists(int hadithId, int gradeId, String gradingAuthority, int excludeId)
     {
         return hadithGradeDAO.hadithGradeExists(hadithId, gradeId, gradingAuthority, excludeId);
+    }
+
+    // UC-12: Hadith of the Day
+    @Override
+    public DailyHadithDTO getDailyHadithByDate(LocalDate selectionDate)
+    {
+        return dailyHadithDAO().getDailyHadithByDate(selectionDate);
+    }
+
+    @Override
+    public List<Integer> getEligibleHadithIds()
+    {
+        return dailyHadithDAO().getEligibleHadithIds();
+    }
+
+    @Override
+    public boolean insertDailyHadith(DailyHadithDTO selection)
+    {
+        return dailyHadithDAO().insertDailyHadith(selection);
+    }
+
+    @Override
+    public boolean replaceDailyHadith(DailyHadithDTO selection, int expectedHadithId)
+    {
+        return dailyHadithDAO().replaceDailyHadith(selection, expectedHadithId);
+    }
+
+    @Override
+    public boolean deleteInvalidDailyHadith(LocalDate selectionDate, int expectedHadithId)
+    {
+        return dailyHadithDAO().deleteInvalidDailyHadith(selectionDate, expectedHadithId);
+    }
+
+    // Legacy constructors support tests that do not need UC12
+    private IDailyHadithDAO dailyHadithDAO()
+    {
+        if (dailyHadithDAO == null)
+        {
+            throw new IllegalStateException("Daily Hadith DAO is not configured.");
+        }
+        return dailyHadithDAO;
     }
 }

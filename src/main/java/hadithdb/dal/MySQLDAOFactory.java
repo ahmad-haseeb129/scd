@@ -71,4 +71,9 @@ public class MySQLDAOFactory extends AbstractDAOFactory {
     public IHadithGradeDAO createHadithGradeDAO() {
         return new HadithGradeDAO();
     }
+    
+    @Override
+    public IDailyHadithDAO createDailyHadithDAO() {
+        return new DailyHadithDAO();
+    }
 }

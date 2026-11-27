@@ -2,6 +2,7 @@ package hadithdb.pl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import hadithdb.bll.BLLFacade;
 import hadithdb.bll.BookBO;
@@ -31,6 +32,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 public class MainWindow {
 
@@ -61,6 +63,7 @@ public class MainWindow {
     private final ToggleButton topicsNav;
     private final ToggleButton gradesNav;
     private final ToggleButton readerNav;
+    private final ToggleButton dailyHadithNav;
     private final ReaderController reader;
     private final VBox navBox = new VBox(6);
     private final ToggleGroup modes = new ToggleGroup();
@@ -79,8 +82,14 @@ public class MainWindow {
         narratorsNav = navButton("Narrators", this::showNarrators);
         topicsNav = navButton("Topics", this::showTopics);
         gradesNav = navButton("Grades", this::showGrades);
-        reader = new ReaderController(business.reader(), this);
+        reader = new ReaderController(business.reader(), business.dailyHadith(), this);
         readerNav = navButton(BROWSE, reader::showCollections);
+        dailyHadithNav = navButton("Hadith of the Day\nآج کی حدیث", reader::showDailyHadith);
+        dailyHadithNav.setWrapText(true);
+        dailyHadithNav.setFont(UiFonts.arabicCapable(13));
+        dailyHadithNav.setId("daily-nav");
+        readerNav.setId("reader-browse-nav");
+        readerMode.setId("reader-mode");
 
         Label appTitle = new Label("Hadith Database");
         appTitle.setFont(Font.font(Font.getDefault().getFamily(), FontWeight.BOLD, 17));
@@ -110,6 +119,7 @@ public class MainWindow {
         stage.setTitle("Hadith Database");
         stage.setScene(new Scene(shell, 1100, 720));
         stage.centerOnScreen();
+        stage.addEventHandler(WindowEvent.WINDOW_HIDDEN, event -> reader.closeDailyHadith());
     }
 
     public void showCollections() {
@@ -153,18 +163,31 @@ public class MainWindow {
         show(gradesNav, new GradePanel(business.grades(), business.changes()), new ArrayList<>());
     }
 
-    /** Used by the reader (UC-08): shows a reader screen with its own breadcrumb trail. */
     void showReaderPanel(Node panel, List<Crumb> trail) {
         show(readerNav, panel, trail);
     }
 
-    /** Administrator / Reader switch at the top of the sidebar. No login: the user switches directly. */
+    void showDailyReaderPanel(Node panel, List<Crumb> trail) {
+        show(dailyHadithNav, panel, trail);
+    }
+
+    public void setHadithDetailsOpener(BiConsumer<Integer, Runnable> opener) {
+        reader.setHadithDetailsOpener(opener);
+    }
+
+    public String getPreferredReaderLanguage() {
+        return reader.getPreferredReaderLanguage();
+    }
+
+    public void setPreferredReaderLanguage(String language) {
+        reader.setPreferredReaderLanguage(language);
+    }
+
     private VBox buildModeSwitch() {
         Label caption = new Label(MODE_CAPTION);
         caption.setStyle("-fx-text-fill: #5b6b7d; -fx-font-size: 11;");
         adminMode.setToggleGroup(modes);
         readerMode.setToggleGroup(modes);
-        // a toggle group lets the selected button be clicked off; keep one mode always selected
         modes.selectedToggleProperty().addListener((o, was, now) -> {
             if (now == null && was != null) {
                 was.setSelected(true);
@@ -184,16 +207,19 @@ public class MainWindow {
         return new VBox(3, caption, switcher);
     }
 
-    /** Shows the sidebar items of the current mode. Only changes what is shown, it does not navigate. */
     private void setMode(boolean reading) {
         (reading ? readerMode : adminMode).setSelected(true);
         navBox.getChildren().setAll(reading
-                ? List.of(readerNav)
+                ? List.of(readerNav, dailyHadithNav)
                 : List.of(collectionsNav, narratorsNav, topicsNav, gradesNav));
     }
 
     private void show(ToggleButton section, Node panel, List<Crumb> trail) {
-        setMode(section == readerNav);
+        Node previous = content.getCenter();
+        if (previous instanceof DailyHadithPanel && previous != panel) {
+            reader.closeDailyHadith((DailyHadithPanel) previous);
+        }
+        setMode(section == readerNav || section == dailyHadithNav);
         nav.selectToggle(section);
         content.setCenter(panel);
         showCrumbs(trail);

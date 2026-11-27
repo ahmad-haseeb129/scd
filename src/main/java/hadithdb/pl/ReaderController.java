@@ -1,28 +1,30 @@
 package hadithdb.pl;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.BiConsumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.concurrent.Task;
+import javafx.util.Duration;
 
 import javafx.scene.Node;
 
 import hadithdb.bll.ReaderBO;
+import hadithdb.bll.DailyHadithBO;
+import hadithdb.dto.DailyHadithViewDTO;
 import hadithdb.exception.DataAccessException;
 import hadithdb.exception.RecordNotFoundException;
 import hadithdb.pl.MainWindow.Crumb;
 
-/**
- * Navigation for the reader (UC-08): decides which screen opens next and builds the
- * breadcrumb trail shown above it (Collections, then book, then chapter, then Glossary).
- * Every crumb leads to a reader screen, never to an admin screen. All data comes from
- * ReaderBO, which only reads, so nothing here can change stored data.
- *
- * Errors are handled in one place (guarded): a record that was deleted while browsing shows
- * a clear message and returns to the collection list, a database failure shows a message and
- * leaves the reader on the current screen.
- */
+
 public class ReaderController
 {
-    // English / Urdu labels, Urdu written with unicode escapes so the file does not depend on encoding.
     private static final String COLLECTIONS = "Collections / "
             + "\u0645\u062C\u0645\u0648\u0639\u06D2";
     private static final String BOOKS = "Books / "
@@ -44,17 +46,190 @@ public class ReaderController
     private static final String GLOSSARY = "Glossary / "
             + "\u0644\u063A\u062A";
 
+    private static final Logger LOG = Logger.getLogger(ReaderController.class.getName());
+
     private final ReaderBO bo;
     private final MainWindow window;
     private Node shown;
 
+    private final DailyHadithBO dailyBO;
+    private final DailyHadithModel dailyModel;
+    private DailyHadithPanel dailyPanel;
+    private Task<DailyHadithViewDTO> dailyTask;
+    private Timeline dailyDateCheck;
+    private BiConsumer<Integer, Runnable> hadithDetailsOpener;
+
     public ReaderController(ReaderBO bo, MainWindow window)
+    {
+        this(bo, null, window);
+    }
+
+    public ReaderController(ReaderBO bo, DailyHadithBO dailyBO, MainWindow window)
     {
         this.bo = bo;
         this.window = window;
+        this.dailyBO = dailyBO;
+        this.dailyModel = dailyBO == null ? null : new DailyHadithModel(dailyBO);
     }
 
-    // ---------- the six screens ----------
+
+    public void setHadithDetailsOpener(BiConsumer<Integer, Runnable> opener)
+    {
+        hadithDetailsOpener = Objects.requireNonNull(opener);
+    }
+
+    String getPreferredReaderLanguage()
+    {
+        return dailyModel == null ? null : dailyModel.getState().getPreferredLanguage();
+    }
+
+    void setPreferredReaderLanguage(String language)
+    {
+        if (dailyModel != null)
+        {
+            dailyModel.selectLanguage(language);
+        }
+    }
+
+    public void showDailyHadith()
+    {
+        if (dailyBO == null)
+        {
+            throw new IllegalStateException("Daily Hadith business object is not configured.");
+        }
+        if (dailyPanel == null)
+        {
+            dailyPanel = new DailyHadithPanel(dailyModel, this::openDailyDetails);
+            dailyDateCheck = new Timeline(new KeyFrame(Duration.seconds(1), event -> checkDailyDate()));
+            dailyDateCheck.setCycleCount(Timeline.INDEFINITE);
+        }
+        shown = dailyPanel;
+        window.showDailyReaderPanel(dailyPanel, List.of());
+        dailyDateCheck.play();
+        if (dailyTask == null)
+        {
+            loadDailyHadith();
+        }
+    }
+
+    private void checkDailyDate()
+    {
+        if (dailyPanel != null && !dailyBO.currentDate().equals(dailyModel.getState().getSelectionDate()))
+        {
+            loadDailyHadith();
+        }
+    }
+
+    private void loadDailyHadith()
+    {
+        cancelDailyTask();
+        LocalDate requestedDate = dailyBO.currentDate();
+        dailyModel.beginLoading(requestedDate);
+        Task<DailyHadithViewDTO> task = new Task<DailyHadithViewDTO>()
+        {
+            @Override
+            protected DailyHadithViewDTO call()
+            {
+                return dailyBO.getDailyHadith();
+            }
+        };
+        dailyTask = task;
+        task.setOnSucceeded(event ->
+        {
+            if (dailyTask != task || dailyPanel == null)
+            {
+                return; 
+            }
+            dailyTask = null;
+            DailyHadithViewDTO result = task.getValue();
+            LocalDate today = dailyBO.currentDate();
+            if (!today.equals(requestedDate) || (result != null && !today.equals(result.getSelectionDate())))
+            {
+                loadDailyHadith(); 
+                return;
+            }
+            dailyModel.showResult(requestedDate, result);
+        });
+        task.setOnFailed(event ->
+        {
+            if (dailyTask != task || dailyPanel == null)
+            {
+                return;
+            }
+            dailyTask = null;
+            LOG.log(Level.WARNING, "Daily Hadith retrieval failed", task.getException());
+            if (!dailyBO.currentDate().equals(requestedDate))
+            {
+                loadDailyHadith();
+            }
+            else
+            {
+                dailyModel.showError(requestedDate);
+            }
+        });
+        Thread worker = new Thread(task, "daily-hadith-reader");
+        worker.setDaemon(true);
+        worker.start();
+    }
+
+    private void cancelDailyTask()
+    {
+        Task<DailyHadithViewDTO> old = dailyTask;
+        dailyTask = null;
+        if (old != null)
+        {
+            old.cancel(true);
+        }
+    }
+
+    private void openDailyDetails(int hadithId)
+    {
+        if (dailyPanel == null || !dailyModel.getState().hasHadith())
+        {
+            return;
+        }
+        if (!dailyBO.currentDate().equals(dailyModel.getState().getSelectionDate()))
+        {
+            loadDailyHadith();
+            return;
+        }
+        if (hadithDetailsOpener == null)
+        {
+            ErrorHandler.showWarning(dailyPanel, "Hadith details / حدیث کی تفصیل",
+                "The UC-11 detail view is not connected yet. / تفصیلی منظر ابھی منسلک نہیں ہے۔");
+            return;
+        }
+        hadithDetailsOpener.accept(hadithId, this::showDailyHadith);
+    }
+
+    void closeDailyHadith(DailyHadithPanel panel)
+    {
+        if (panel == dailyPanel)
+        {
+            closeDailyHadith();
+        }
+    }
+
+    void closeDailyHadith()
+    {
+        cancelDailyTask();
+        if (dailyDateCheck != null)
+        {
+            dailyDateCheck.stop();
+            dailyDateCheck = null;
+        }
+        if (dailyPanel != null)
+        {
+            dailyPanel.dispose();
+            if (shown == dailyPanel)
+            {
+                shown = null;
+            }
+            dailyPanel = null;
+        }
+    }
+
+    //  the six browsing screens 
 
     public void showCollections()
     {
@@ -113,7 +288,7 @@ public class ReaderController
         }, this::showCollections);
     }
 
-    // ---------- breadcrumb trails (the last crumb is the screen being shown) ----------
+    // breadcrumb trails
 
     private List<Crumb> collectionTrail(int collectionId)
     {
@@ -137,7 +312,7 @@ public class ReaderController
         return trail;
     }
 
-    // ---------- helpers ----------
+    // helpers 
 
     private void show(Node panel, List<Crumb> trail)
     {
@@ -145,11 +320,7 @@ public class ReaderController
         window.showReaderPanel(panel, trail);
     }
 
-    /**
-     * Runs a screen change. A missing record shows a message and runs recovery (normally the
-     * collection list). A database failure shows a message and stays where the reader is.
-     * The screen is only replaced after everything it needs was read successfully.
-     */
+    
     private void guarded(Runnable action, Runnable recovery)
     {
         try

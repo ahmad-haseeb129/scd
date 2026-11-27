@@ -30,4 +30,6 @@ public interface IDAOFactory {
     IHadithTopicDAO createHadithTopicDAO();
 
     IHadithGradeDAO createHadithGradeDAO();
+    
+    IDailyHadithDAO createDailyHadithDAO();
 }
