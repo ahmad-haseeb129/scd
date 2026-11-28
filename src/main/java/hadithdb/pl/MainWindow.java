@@ -49,6 +49,7 @@ public class MainWindow {
             + "\u0642\u0627\u0631\u06CC";
     private static final String BROWSE = "Browse / "
             + "\u0628\u0631\u0627\u0624\u0632";
+    private static final String SEARCH = "Search / \u062A\u0644\u0627\u0634";
     private static final String MODE_CAPTION = "Mode / "
             + "\u0645\u0648\u0688";
     private static final String MODE_IDLE = "-fx-text-fill: #1b2a3a;";
@@ -69,6 +70,7 @@ public class MainWindow {
     private final ToggleButton gradesNav;
     private final ToggleButton readerNav;
     private final ToggleButton dailyHadithNav;
+    private final ToggleButton searchNav;
     private final ReaderController reader;
     private final VBox navBox = new VBox(6);
     private final ToggleGroup modes = new ToggleGroup();
@@ -87,13 +89,15 @@ public class MainWindow {
         narratorsNav = navButton("Narrators", this::showNarrators);
         topicsNav = navButton("Topics", this::showTopics);
         gradesNav = navButton("Grades", this::showGrades);
-        reader = new ReaderController(business.reader(), business.dailyHadith(), this);
+        reader = new ReaderController(business.reader(), business.dailyHadith(), business.search(), this);
         reader.setHadithDetailsOpener(this::showHadithDetails);
         readerNav = navButton(BROWSE, reader::showCollections);
         dailyHadithNav = navButton("Hadith of the Day\nآج کی حدیث", reader::showDailyHadith);
         dailyHadithNav.setWrapText(true);
         dailyHadithNav.setFont(UiFonts.arabicCapable(13));
         dailyHadithNav.setId("daily-nav");
+        searchNav = navButton(SEARCH, reader::showSearch);
+        searchNav.setId("reader-search-nav");
         readerNav.setId("reader-browse-nav");
         readerMode.setId("reader-mode");
 
@@ -173,6 +177,10 @@ public class MainWindow {
         show(readerNav, panel, trail);
     }
 
+    void showSearchReaderPanel(Node panel, List<Crumb> trail) {
+        show(searchNav, panel, trail);
+    }
+
     void showDailyReaderPanel(Node panel, List<Crumb> trail) {
         show(dailyHadithNav, panel, trail);
     }
@@ -216,7 +224,7 @@ public class MainWindow {
     private void setMode(boolean reading) {
         (reading ? readerMode : adminMode).setSelected(true);
         navBox.getChildren().setAll(reading
-                ? List.of(readerNav, dailyHadithNav)
+                ? List.of(readerNav, searchNav, dailyHadithNav)
                 : List.of(collectionsNav, narratorsNav, topicsNav, gradesNav));
     }
 
@@ -225,7 +233,7 @@ public class MainWindow {
         if (previous instanceof DailyHadithPanel && previous != panel) {
             reader.closeDailyHadith((DailyHadithPanel) previous);
         }
-        setMode(section == readerNav || section == dailyHadithNav);
+        setMode(section == readerNav || section == dailyHadithNav || section == searchNav);
         nav.selectToggle(section);
         content.setCenter(panel);
         showCrumbs(trail);

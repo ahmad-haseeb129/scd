@@ -17,6 +17,7 @@ import javafx.scene.Node;
 
 import hadithdb.bll.ReaderBO;
 import hadithdb.bll.DailyHadithBO;
+import hadithdb.bll.HadithSearchBO;
 import hadithdb.dto.DailyHadithViewDTO;
 import hadithdb.exception.DataAccessException;
 import hadithdb.exception.RecordNotFoundException;
@@ -46,6 +47,8 @@ public class ReaderController
     private static final String GLOSSARY = "Glossary / "
             + "\u0644\u063A\u062A";
 
+    private static final String SEARCH = "Search / \u062A\u0644\u0627\u0634";
+
     private static final Logger LOG = Logger.getLogger(ReaderController.class.getName());
 
     private final ReaderBO bo;
@@ -59,6 +62,9 @@ public class ReaderController
     private Timeline dailyDateCheck;
     private BiConsumer<Integer, Runnable> hadithDetailsOpener;
 
+    private final HadithSearchBO searchBO;
+    private SearchPanel searchPanel;
+
     public ReaderController(ReaderBO bo, MainWindow window)
     {
         this(bo, null, window);
@@ -66,10 +72,16 @@ public class ReaderController
 
     public ReaderController(ReaderBO bo, DailyHadithBO dailyBO, MainWindow window)
     {
+        this(bo, dailyBO, null, window);
+    }
+
+    public ReaderController(ReaderBO bo, DailyHadithBO dailyBO, HadithSearchBO searchBO, MainWindow window)
+    {
         this.bo = bo;
         this.window = window;
         this.dailyBO = dailyBO;
         this.dailyModel = dailyBO == null ? null : new DailyHadithModel(dailyBO);
+        this.searchBO = searchBO;
     }
 
 
@@ -238,6 +250,41 @@ public class ReaderController
             }
             dailyPanel = null;
         }
+    }
+
+    // UC-09: search. One panel is kept for the session, so the query, mode and results survive
+    // opening a Hadith and coming back.
+
+    public void showSearch()
+    {
+        if (searchBO == null)
+        {
+            ErrorHandler.showWarning(shown, SEARCH, "Search is not available. / تلاش دستیاب نہیں ہے۔");
+            return;
+        }
+        if (searchPanel == null)
+        {
+            searchPanel = new SearchPanel(searchBO, this::openSearchResult);
+        }
+        shown = searchPanel;
+        List<Crumb> trail = new ArrayList<>();
+        trail.add(new Crumb(SEARCH, null));
+        window.showSearchReaderPanel(searchPanel, trail);
+    }
+
+    /** Starts a similarity search from a Hadith chosen elsewhere, for example a Hadith list. */
+    public void showSimilar(int hadithId, String hadithNumber, String sourceReference)
+    {
+        showSearch();
+        if (searchPanel != null)
+        {
+            searchPanel.showSimilarTo(hadithId, hadithNumber, sourceReference);
+        }
+    }
+
+    private void openSearchResult(int hadithId)
+    {
+        openHadithDetails(hadithId, this::showSearch);
     }
 
     //  the six browsing screens 

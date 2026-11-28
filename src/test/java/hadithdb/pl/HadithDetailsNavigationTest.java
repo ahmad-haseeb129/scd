@@ -16,6 +16,9 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import hadithdb.bll.BLLFacade;
 import hadithdb.dto.BrowseRow;
+import hadithdb.dto.HadithSummaryDTO;
+import hadithdb.dto.SearchRecordDTO;
+import hadithdb.dto.SearchTextDTO;
 import hadithdb.dto.HadithDetailsDTO;
 import hadithdb.dal.DALFacade;
 import hadithdb.dto.BookDTO;
@@ -98,6 +101,39 @@ class HadithDetailsNavigationTest {
             TableView<?> table = (TableView<?>) browse.getCenter();
             assertEquals(1, table.getItems().size());
             assertEquals(8, ((BrowseRow) table.getSelectionModel().getSelectedItem()).getId());
+            return null;
+        });
+    }
+
+    @Test
+    void searchOpensRealDetailsAndBackKeepsQueryResultsAndSelection() throws Exception {
+        SearchPanel panel = fx(() -> {
+            ((ToggleButton) stage.getScene().lookup("#reader-mode")).fire();
+            ((ToggleButton) stage.getScene().lookup("#reader-search-nav")).fire();
+            TextField query = (TextField) stage.getScene().lookup("#search-query");
+            query.setText("Reference 8");
+            button("#search-submit").fire();
+            return (SearchPanel) ((TableView<?>) stage.getScene().lookup("#search-results")).getParent();
+        });
+        await("#search-results");
+        fx(() -> {
+            TableView<?> table = (TableView<?>) panel.lookup("#search-results");
+            assertEquals(1, table.getItems().size());
+            table.getSelectionModel().select(0);
+            assertEquals(8, ((HadithSummaryDTO) table.getSelectionModel().getSelectedItem()).getHadithId());
+            button("#search-open").fire();
+            return null;
+        });
+        await("#details-language");
+        fx(() -> {
+            assertTrue(stage.getScene().getRoot().lookupAll(".label").stream()
+                    .anyMatch(node -> "Reference 8".equals(((Label) node).getText())));
+            button("#details-back").fire();
+            assertSame(stage.getScene(), panel.getScene());
+            assertEquals("Reference 8", ((TextField) panel.lookup("#search-query")).getText());
+            TableView<?> table = (TableView<?>) panel.lookup("#search-results");
+            assertEquals(1, table.getItems().size());
+            assertEquals(8, ((HadithSummaryDTO) table.getSelectionModel().getSelectedItem()).getHadithId());
             return null;
         });
     }
@@ -228,6 +264,21 @@ class HadithDetailsNavigationTest {
             return List.of(new TranslationDTO(1, id, "English", "English text", "Translator A"),
                     new TranslationDTO(2, id, "Urdu", "اردو ترجمہ", null));
         }
+
+        @Override
+        public List<SearchRecordDTO> getAllSearchRecords() {
+            return List.of(new SearchRecordDTO(7, "7", "Reference 7", "عربي", "Collection", 1, "Book", 1, "Chapter"),
+                    new SearchRecordDTO(8, "8", "Reference 8", "عربي", "Collection", 1, "Book", 1, "Chapter"));
+        }
+
+        @Override
+        public List<SearchTextDTO> getAllTranslationTexts() { return List.of(); }
+
+        @Override
+        public List<SearchTextDTO> getAllNarratorNames() { return List.of(); }
+
+        @Override
+        public List<SearchTextDTO> getAllTopicNames() { return List.of(); }
 
         @Override
         public HadithDetailsDTO loadHadithDetails(int id) {

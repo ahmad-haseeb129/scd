@@ -81,4 +81,9 @@ public class MySQLDAOFactory extends AbstractDAOFactory {
     public IHadithDetailsDAO createHadithDetailsDAO() {
         return new HadithDetailsDAO();
     }
+
+    @Override
+    public ISearchDAO createSearchDAO() {
+        return new SearchDAO();
+    }
 }

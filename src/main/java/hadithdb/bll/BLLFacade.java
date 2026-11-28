@@ -20,6 +20,7 @@ public class BLLFacade {
     private final HadithGradeBO hadithGrades;
     private final ReaderBO reader;
     private final HadithDetailsBO hadithDetails;
+    private final HadithSearchBO search;
     private final DailyHadithBO dailyHadith;
 
     public BLLFacade(IDALFacade dal) {
@@ -41,6 +42,7 @@ public class BLLFacade {
         hadithGrades = new HadithGradeBO(dal, dal);
         reader = new ReaderBO(dal);
         hadithDetails = new HadithDetailsBO(dal);
+        search = new HadithSearchBO(dal);
         dailyHadith = new DailyHadithBO(dal, clock);
     }
 
@@ -106,5 +108,9 @@ public class BLLFacade {
 
     public HadithDetailsBO hadithDetails() {
         return hadithDetails;
+    }
+
+    public HadithSearchBO search() {
+        return search;
     }
 }

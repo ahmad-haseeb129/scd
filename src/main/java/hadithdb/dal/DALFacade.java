@@ -18,6 +18,9 @@ import hadithdb.dto.HadithTopicDTO;
 import hadithdb.dto.NarratorDTO;
 import hadithdb.dto.TopicDTO;
 import hadithdb.dto.TranslationDTO;
+import hadithdb.dto.SearchRecordDTO;
+import hadithdb.dto.SearchTextDTO;
+import hadithdb.exception.ConfigurationException;
 
 public class DALFacade implements IDALFacade 
 {
@@ -39,6 +42,7 @@ public class DALFacade implements IDALFacade
     private final IHadithGradeDAO hadithGradeDAO;
     private final IDailyHadithDAO dailyHadithDAO;
     private final IHadithDetailsDAO hadithDetailsDAO;
+    private final ISearchDAO searchDAO;
 
     public DALFacade(
             ICollectionDAO collectionDAO, 
@@ -148,7 +152,32 @@ public class DALFacade implements IDALFacade
             IDailyHadithDAO dailyHadithDAO,
             IHadithDetailsDAO hadithDetailsDAO)
     {
+        this(collectionDAO, bookDAO, chapterDAO, hadithDAO, translationDAO,
+             glossaryDAO, impactDAO, topics, grades, impact, narratorDAO,
+             hadithNarratorDAO, hadithTopicDAO, hadithGradeDAO, dailyHadithDAO, hadithDetailsDAO, null);
+    }
+
+    public DALFacade(
+            ICollectionDAO collectionDAO,
+            IBookDAO bookDAO,
+            IChapterDAO chapterDAO,
+            IHadithDAO hadithDAO,
+            ITranslationDAO translationDAO,
+            IGlossaryDAO glossaryDAO,
+            IDeletionImpactDAO impactDAO,
+            ITopicDAO topics,
+            IGradeDefinitionDAO grades,
+            IClassificationImpactDAO impact,
+            INarratorDAO narratorDAO,
+            IHadithNarratorDAO hadithNarratorDAO,
+            IHadithTopicDAO hadithTopicDAO,
+            IHadithGradeDAO hadithGradeDAO,
+            IDailyHadithDAO dailyHadithDAO,
+            IHadithDetailsDAO hadithDetailsDAO,
+            ISearchDAO searchDAO)
+    {
         this.hadithDetailsDAO = hadithDetailsDAO;
+        this.searchDAO = searchDAO;
         this.dailyHadithDAO = dailyHadithDAO;
         this.hadithNarratorDAO = hadithNarratorDAO;
         this.hadithTopicDAO = hadithTopicDAO;
@@ -184,7 +213,8 @@ public class DALFacade implements IDALFacade
             factory.createHadithTopicDAO(),
             factory.createHadithGradeDAO(),
             factory.createDailyHadithDAO(),
-            factory.createHadithDetailsDAO()
+            factory.createHadithDetailsDAO(),
+            factory.createSearchDAO()
         );
     }
 
@@ -740,4 +770,45 @@ public class DALFacade implements IDALFacade
         }
         return hadithDetailsDAO;
     }
+
+    // UC-09: search (read-only)
+    @Override
+    public List<SearchRecordDTO> getAllSearchRecords()
+    {
+        return searchDAO().getAllSearchRecords();
+    }
+
+    @Override
+    public List<SearchTextDTO> getAllTranslationTexts()
+    {
+        return searchDAO().getAllTranslationTexts();
+    }
+
+    @Override
+    public List<SearchTextDTO> getAllNarratorNames()
+    {
+        return searchDAO().getAllNarratorNames();
+    }
+
+    @Override
+    public List<SearchTextDTO> getAllTopicNames()
+    {
+        return searchDAO().getAllTopicNames();
+    }
+
+    @Override
+    public List<SearchTextDTO> getTextsByLanguage(String language)
+    {
+        return searchDAO().getTextsByLanguage(language);
+    }
+
+    private ISearchDAO searchDAO()
+    {
+        if (searchDAO == null)
+        {
+            throw new ConfigurationException("The search DAO is not configured.", null);
+        }
+        return searchDAO;
+    }
+
 }

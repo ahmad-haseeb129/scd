@@ -162,4 +162,11 @@ class BLLFacadeTest
         assertNotNull(facade.hadithDetails());
         assertSame(facade.hadithDetails(), facade.hadithDetails());
     }
+
+    @Test
+    void search_returnsTheSameInstanceEachTime()
+    {
+        assertNotNull(facade.search());
+        assertSame(facade.search(), facade.search());
+    }
 }
