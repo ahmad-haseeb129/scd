@@ -7,6 +7,7 @@ import hadithdb.dto.BookDTO;
 import hadithdb.dto.ChapterDTO;
 import hadithdb.dto.CollectionDTO;
 import hadithdb.dto.DailyHadithDTO;
+import hadithdb.dto.HadithDetailsDTO;
 import hadithdb.dto.DeletionImpactDTO;
 import hadithdb.dto.GlossaryEntryDTO;
 import hadithdb.dto.GradeDefinitionDTO;
@@ -37,6 +38,7 @@ public class DALFacade implements IDALFacade
     private final IHadithTopicDAO hadithTopicDAO;
     private final IHadithGradeDAO hadithGradeDAO;
     private final IDailyHadithDAO dailyHadithDAO;
+    private final IHadithDetailsDAO hadithDetailsDAO;
 
     public DALFacade(
             ICollectionDAO collectionDAO, 
@@ -123,6 +125,30 @@ public class DALFacade implements IDALFacade
             IHadithGradeDAO hadithGradeDAO,
             IDailyHadithDAO dailyHadithDAO)
     {
+        this(collectionDAO, bookDAO, chapterDAO, hadithDAO, translationDAO,
+             glossaryDAO, impactDAO, topics, grades, impact, narratorDAO,
+             hadithNarratorDAO, hadithTopicDAO, hadithGradeDAO, dailyHadithDAO, null);
+    }
+
+    public DALFacade(
+            ICollectionDAO collectionDAO,
+            IBookDAO bookDAO,
+            IChapterDAO chapterDAO,
+            IHadithDAO hadithDAO,
+            ITranslationDAO translationDAO,
+            IGlossaryDAO glossaryDAO,
+            IDeletionImpactDAO impactDAO,
+            ITopicDAO topics,
+            IGradeDefinitionDAO grades,
+            IClassificationImpactDAO impact,
+            INarratorDAO narratorDAO,
+            IHadithNarratorDAO hadithNarratorDAO,
+            IHadithTopicDAO hadithTopicDAO,
+            IHadithGradeDAO hadithGradeDAO,
+            IDailyHadithDAO dailyHadithDAO,
+            IHadithDetailsDAO hadithDetailsDAO)
+    {
+        this.hadithDetailsDAO = hadithDetailsDAO;
         this.dailyHadithDAO = dailyHadithDAO;
         this.hadithNarratorDAO = hadithNarratorDAO;
         this.hadithTopicDAO = hadithTopicDAO;
@@ -157,7 +183,8 @@ public class DALFacade implements IDALFacade
             factory.createHadithNarratorDAO(),
             factory.createHadithTopicDAO(),
             factory.createHadithGradeDAO(),
-            factory.createDailyHadithDAO()
+            factory.createDailyHadithDAO(),
+            factory.createHadithDetailsDAO()
         );
     }
 
@@ -697,5 +724,20 @@ public class DALFacade implements IDALFacade
             throw new IllegalStateException("Daily Hadith DAO is not configured.");
         }
         return dailyHadithDAO;
+    }
+
+    @Override
+    public HadithDetailsDTO loadHadithDetails(int hadithId)
+    {
+        return hadithDetailsDAO().loadHadithDetails(hadithId);
+    }
+
+    private IHadithDetailsDAO hadithDetailsDAO()
+    {
+        if (hadithDetailsDAO == null)
+        {
+            throw new IllegalStateException("Hadith details DAO is not configured.");
+        }
+        return hadithDetailsDAO;
     }
 }

@@ -1,5 +1,10 @@
 package hadithdb.pl;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.concurrent.Task;
+import hadithdb.dto.HadithDetailsDTO;
+import hadithdb.exception.RecordNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -83,6 +88,7 @@ public class MainWindow {
         topicsNav = navButton("Topics", this::showTopics);
         gradesNav = navButton("Grades", this::showGrades);
         reader = new ReaderController(business.reader(), business.dailyHadith(), this);
+        reader.setHadithDetailsOpener(this::showHadithDetails);
         readerNav = navButton(BROWSE, reader::showCollections);
         dailyHadithNav = navButton("Hadith of the Day\nآج کی حدیث", reader::showDailyHadith);
         dailyHadithNav.setWrapText(true);
@@ -324,5 +330,37 @@ public class MainWindow {
             this.text = text;
             this.go = go;
         }
+    }
+
+    void showHadithDetails(int hadithId, Runnable onBack) {
+        HadithDetailsPanel panel = new HadithDetailsPanel(onBack);
+        showReaderPanel(panel, List.of());
+        Task<HadithDetailsDTO> task = new Task<HadithDetailsDTO>() {
+            @Override
+            protected HadithDetailsDTO call() {
+                return business.hadithDetails().getDetails(hadithId);
+            }
+        };
+        task.setOnSucceeded(event -> {
+            if (panel.getScene() != null) {
+                panel.display(task.getValue(), getPreferredReaderLanguage(), this::setPreferredReaderLanguage);
+            }
+        });
+        task.setOnFailed(event -> {
+            if (task.getException() instanceof RecordNotFoundException) {
+                panel.message("Hadith unavailable. Go back and choose another. / واپس جا کر دوسری حدیث منتخب کریں۔");
+            } else {
+                Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, "Could not load Hadith details", task.getException());
+                panel.message("Could not load details. Go back and try again. / واپس جا کر دوبارہ کوشش کریں۔");
+            }
+        });
+        panel.sceneProperty().addListener((source, before, now) -> {
+            if (now == null) {
+                task.cancel();
+            }
+        });
+        Thread worker = new Thread(task, "hadith-details-reader");
+        worker.setDaemon(true);
+        worker.start();
     }
 }

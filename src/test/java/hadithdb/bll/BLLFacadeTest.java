@@ -155,4 +155,11 @@ class BLLFacadeTest
         assertNotNull(facade.reader());
         assertSame(facade.reader(), facade.reader());
     }
+
+    @Test
+    void hadithDetails_returnsTheSameBusinessObject()
+    {
+        assertNotNull(facade.hadithDetails());
+        assertSame(facade.hadithDetails(), facade.hadithDetails());
+    }
 }

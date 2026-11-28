@@ -182,6 +182,17 @@ public class ReaderController
         }
     }
 
+    public void openHadithDetails(int hadithId, Runnable onBack)
+    {
+        if (hadithDetailsOpener == null)
+        {
+            ErrorHandler.showWarning(shown, "Hadith details / حدیث کی تفصیل",
+                "The detail view is not connected yet. / تفصیلی منظر ابھی منسلک نہیں ہے۔");
+            return;
+        }
+        hadithDetailsOpener.accept(hadithId, onBack);
+    }
+
     private void openDailyDetails(int hadithId)
     {
         if (dailyPanel == null || !dailyModel.getState().hasHadith())
@@ -262,8 +273,10 @@ public class ReaderController
         guarded(() ->
         {
             List<Crumb> trail = chapterTrail(chapterId);
-            show(new BrowsePanel(HADITH, SOURCE_REFERENCE, bo.hadithRows(chapterId), ReaderBO.NO_HADITH,
-                    null, null), trail);
+            BrowsePanel[] list = new BrowsePanel[1];
+            list[0] = new BrowsePanel(HADITH, SOURCE_REFERENCE, bo.hadithRows(chapterId), ReaderBO.NO_HADITH,
+                    id -> openHadithDetails(id, () -> show(list[0], trail)), null);
+            show(list[0], trail);
         }, this::showCollections);
     }
 
